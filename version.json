@@ -1,5 +1,5 @@
 {
-  "version": "1.1.1",
+  "version": "1.1.2",
   "requirements_changed": false,
-  "notes": "Test bump only, to verify the auto-update mechanism works end-to-end. No code changes."
+  "notes": "Fixed the update-checker's own lock mechanism: a stale lock file from an unclean shutdown could permanently block future update checks. Now checks the actual server port instead of a file."
 }

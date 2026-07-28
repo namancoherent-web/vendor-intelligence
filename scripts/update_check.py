@@ -112,9 +112,26 @@ def _version_tuple(v: str) -> tuple[int, ...]:
     return tuple(parts) or (0,)
 
 
+SERVER_PORTS = (8080, 8501)  # api/main.py (uvicorn) and app.py (streamlit)
+
+
 def _is_locked() -> bool:
-    lock = _project_root() / "data" / ".update_running.lock"
-    return lock.exists()
+    """True if this app's own server is already listening — checked directly via the actual
+    port instead of a lock FILE, which would go stale forever if a previous window was closed
+    uncleanly (e.g. the X button) instead of stopped normally."""
+    import socket
+
+    for port in SERVER_PORTS:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(0.3)
+        try:
+            if s.connect_ex(("127.0.0.1", port)) == 0:
+                return True
+        except Exception:
+            pass
+        finally:
+            s.close()
+    return False
 
 
 def _download_zip(dest_dir: Path) -> Path | None:

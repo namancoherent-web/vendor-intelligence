@@ -60,9 +60,7 @@ echo.
 echo Starting Web UI at http://127.0.0.1:8080
 echo Keep this window open. Ctrl+C to stop.
 echo.
-type nul > "%~dp0data\.update_running.lock" 2>nul
 .venv\Scripts\python.exe -m uvicorn api.main:app --host 127.0.0.1 --port 8080
-del "%~dp0data\.update_running.lock" 2>nul
 echo.
 echo Server stopped.
 goto :end
