@@ -437,9 +437,9 @@ async def run_pipeline(
             from vendor_intel.pipeline.discovery_store import load_discovered
 
             if _store_on():
-                stored = load_discovered(store_market)
-                print(f"  [pipeline] discovery store: market={store_market!r} -> loaded {len(stored)} "
-                      f"previously-found compan(ies)", flush=True)
+                stored = load_discovered(store_market, country)
+                print(f"  [pipeline] discovery store: market={store_market!r} geo={country!r} -> "
+                      f"loaded {len(stored)} previously-found compan(ies)", flush=True)
                 for r in stored:
                     d = str(r.get("domain") or "").lower().removeprefix("www.")
                     if not d:
@@ -449,8 +449,10 @@ async def run_pipeline(
                         "name": r["name"], "domain": r["domain"], "company_function": "",
                         "discovery_source": "store", "is_seed": False,
                     })
-                    # Previously-CONFIRMED companies are trusted by provenance: bypass the gate's
-                    # fuzzy rejects (non_product_site / gov_or_edu) that misfire on real operators.
+                    # Previously-CONFIRMED companies for THIS market+geo are trusted by provenance:
+                    # bypass the gate's fuzzy rejects (non_product_site / gov_or_edu) that misfire on
+                    # real operators. The store is now scoped per geography, so this can no longer
+                    # leak a different region's confirmed companies into this run.
                     authoritative_domains.add(r["domain"])
         except Exception as exc:
             import traceback
@@ -1079,7 +1081,7 @@ async def run_pipeline(
                     }
                     for c in final if c.get("is_relevant")
                 ]
-                n_store = save_discovered(store_market, _confirmed)
+                n_store = save_discovered(store_market, _confirmed, country)
                 print(f"  [pipeline] discovery store: {len(_confirmed)} confirmed this run -> "
                       f"{n_store} total in cumulative store", flush=True)
         except Exception as exc:

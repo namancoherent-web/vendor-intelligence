@@ -7,7 +7,9 @@ every run — the final export always reflects *current* classification, never a
 noisy entry just gets re-filtered (it never pollutes output). After the run, the companies that
 classified relevant are merged back in (union by domain). Best-effort; never raises.
 
-Store lives at output/.discovery_store/<market_slug>.json. Disable with PIPELINE_DISCOVERY_STORE=0.
+Store lives at output/.discovery_store/<market_slug>__<geo_slug>.json, keyed by market AND
+target geography so a run for "laptops in India" never re-injects / gets polluted by companies
+confirmed for "laptops in Germany". Disable with PIPELINE_DISCOVERY_STORE=0.
 """
 from __future__ import annotations
 
@@ -25,12 +27,17 @@ def _slug(market: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", str(market or "").lower()).strip("_")[:80] or "market"
 
 
+def _geo_slug(geo: str) -> str:
+    g = re.sub(r"[^a-z0-9]+", "_", str(geo or "").lower()).strip("_")[:40]
+    return g or "global"
+
+
 def _norm_dom(d: str) -> str:
     d = str(d or "").strip().lower()
     return d.removeprefix("http://").removeprefix("https://").removeprefix("www.").split("/")[0]
 
 
-def _store_path(market: str):
+def _store_path(market: str, geo: str = ""):
     from pathlib import Path
 
     from vendor_intel.config import _project_root
@@ -40,16 +47,17 @@ def _store_path(market: str):
         d.mkdir(parents=True, exist_ok=True)
     except Exception:
         return None
-    return d / f"{_slug(market)}.json"
+    return d / f"{_slug(market)}__{_geo_slug(geo)}.json"
 
 
 _FIELDS = ("role", "value_chain_section", "company_summary", "company_function")
 
 
-def load_discovered(market: str) -> list[dict[str, str]]:
-    """Return previously-discovered companies for this market (union of past runs). Each row carries
-    name + domain, plus role/section/summary when known (so a carried company is output-complete)."""
-    p = _store_path(market)
+def load_discovered(market: str, geo: str = "") -> list[dict[str, str]]:
+    """Return previously-discovered companies for this market + geography (union of past runs).
+    Each row carries name + domain, plus role/section/summary when known (so a carried company
+    is output-complete)."""
+    p = _store_path(market, geo)
     if not p or not p.exists():
         return []
     try:
@@ -74,13 +82,14 @@ def load_discovered(market: str) -> list[dict[str, str]]:
     return out
 
 
-def save_discovered(market: str, companies: list[dict[str, Any]]) -> int:
-    """Union newly-confirmed companies into the store (keyed by domain). Returns new store size."""
-    p = _store_path(market)
+def save_discovered(market: str, companies: list[dict[str, Any]], geo: str = "") -> int:
+    """Union newly-confirmed companies into the store (keyed by domain, scoped to market+geo).
+    Returns new store size."""
+    p = _store_path(market, geo)
     if not p:
         return 0
     merged: dict[str, dict[str, str]] = {}
-    for c in load_discovered(market):
+    for c in load_discovered(market, geo):
         merged[c["domain"]] = c
     for c in companies or []:
         dom = _norm_dom(c.get("domain"))
@@ -95,7 +104,7 @@ def save_discovered(market: str, companies: list[dict[str, Any]]) -> int:
     try:
         tmp = p.with_suffix(".tmp")
         tmp.write_text(
-            json.dumps({"market": market, "companies": list(merged.values())}, indent=2),
+            json.dumps({"market": market, "geography": geo, "companies": list(merged.values())}, indent=2),
             encoding="utf-8",
         )
         tmp.replace(p)
