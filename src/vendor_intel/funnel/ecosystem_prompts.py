@@ -34,7 +34,8 @@ def _role_specific_query(role: str, topic: str, g: str, kw: str) -> str:
         return _q("biotech", t, "companies", g, "R&D", "pipeline")
     if "integrat" in r or "mssp" in r or "service" in r:
         return _q(t, "service provider", g, "official", "website")
-    if "security" in r or "vendor" in r:
+    if re.search(r"cyber\w*|infosec|information\s+security|network\s+security|"
+                 r"data\s+security|endpoint\s+security|cloud\s+security", r):
         return _q(t, "security vendor", g, "corporate", "site")
     return _q(kw, role, g, "official", "website")
 

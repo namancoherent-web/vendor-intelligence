@@ -14,6 +14,10 @@ echo  Folder: %~dp0
 echo ========================================
 echo.
 
+if exist "%~dp0.venv\Scripts\python.exe" (
+  "%~dp0.venv\Scripts\python.exe" "%~dp0scripts\update_check.py" 2>nul
+)
+
 call "%~dp0setup_local.bat"
 if errorlevel 1 goto :fail
 
@@ -28,7 +32,9 @@ echo.
 echo Starting Streamlit at http://127.0.0.1:8501
 echo Keep this window open. Ctrl+C to stop.
 echo.
+type nul > "%~dp0data\.update_running.lock" 2>nul
 .venv\Scripts\python.exe -m streamlit run app.py --server.headless true --browser.gatherUsageStats false
+del "%~dp0data\.update_running.lock" 2>nul
 echo.
 echo Streamlit stopped.
 goto :end

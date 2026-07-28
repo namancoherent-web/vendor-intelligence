@@ -16,13 +16,29 @@ from vendor_intel.funnel.prompt_builder import (
 
 
 def _is_pharma_market(market: str, terms: list[str]) -> bool:
+    # "pharma"/"pharmaceutical" always count; bare "drug" counts UNLESS it's clearly a
+    # non-manufacturing context (testing/screening/enforcement/policy/abuse), which is
+    # where the old bare-word match used to misfire into unrelated markets.
     blob = f"{market} {' '.join(terms)}".lower()
-    return bool(re.search(r"\b(?:pharma|pharmaceutical|medicine|drug|api)\b", blob))
+    return bool(
+        re.search(
+            r"\b(?:pharma\w*|pharmaceutical\w*|bulk\s+drug|active\s+pharmaceutical\s+ingredient)\b"
+            r"|\bdrug\b(?!\s*(?:test|screen|abuse|polic|war|enforcement|awareness|addict))",
+            blob,
+        )
+    )
 
 
 def _is_cyber_market(market: str, terms: list[str]) -> bool:
+    # Tight signals only — bare "security" also matches physical/food/border security etc.
     blob = f"{market} {' '.join(terms)}".lower()
-    return bool(re.search(r"\b(?:cyber|security|infosec|mssp|siem)\b", blob))
+    return bool(
+        re.search(
+            r"\b(?:cyber\w*|infosec|mssp|siem|information\s+security|network\s+security|"
+            r"data\s+security|endpoint\s+security|cloud\s+security)\b",
+            blob,
+        )
+    )
 
 
 def _is_facade_market(market: str, terms: list[str]) -> bool:

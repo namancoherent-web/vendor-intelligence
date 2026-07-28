@@ -356,7 +356,9 @@ class QueryYieldTracker:
         )
         pharma = bool(
             re.search(
-                r"\b(?:pharma|pharmaceutical|medicine|drug|api|cdmo|gmp)\b",
+                r"\b(?:pharma\w*|pharmaceutical\w*|cdmo|bulk\s+drug|"
+                r"active\s+pharmaceutical\s+ingredient)\b"
+                r"|\bdrug\b(?!\s*(?:test|screen|abuse|polic|war|enforcement|awareness|addict))",
                 blob,
             )
         )

@@ -11,8 +11,17 @@ from vendor_intel.funnel.prompt_builder import _q, geo_search_label, refine_sear
 
 
 def _is_pharma(market: str, terms: list[str]) -> bool:
+    # "pharma"/"pharmaceutical" always count; bare "drug" counts UNLESS it's clearly a
+    # non-manufacturing context (testing/screening/enforcement/policy/abuse), which is
+    # where the old bare-word match used to misfire into unrelated markets.
     blob = f"{market} {' '.join(terms)}".lower()
-    return bool(re.search(r"\b(?:pharma|pharmaceutical|medicine|drug|api)\b", blob))
+    return bool(
+        re.search(
+            r"\b(?:pharma\w*|pharmaceutical\w*|bulk\s+drug|active\s+pharmaceutical\s+ingredient)\b"
+            r"|\bdrug\b(?!\s*(?:test|screen|abuse|polic|war|enforcement|awareness|addict))",
+            blob,
+        )
+    )
 
 
 def build_sector_tree_prompts(
@@ -63,8 +72,6 @@ def build_sector_tree_prompts(
             ("ST10", "exporters", _q("pharmaceutical exporters", g, "WHO", "GMP")),
             ("ST11", "distributors", _q("authorized pharmaceutical distributor", g, "firm")),
             ("ST12", "manufacturers", _q("generics", "pharmaceutical", "manufacturer", g)),
-            ("ST13", "manufacturers", _q("nutraceutical", "manufacturer", g, "official")),
-            ("ST14", "cdmo", _q("veterinary", "pharma", "manufacturer", g)),
             ("ST15", "exporters", _q("pharma", "export", "company", g, "corporate")),
             ("ST16", "distributors", _q("hospital", "pharma", "supplier", g, "official")),
         ]

@@ -7,6 +7,8 @@ frontend/.next/
 .streamlit/secrets.toml
 data/*.db
 data/*.db-*
+data/.update_state.json
+data/.update_running.lock
 frontend/out/
 output/
 output/_searxng*.html
