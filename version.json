@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.1.1",
   "requirements_changed": false,
-  "notes": "Fixed wrong-industry query contamination (drug/pharma and security/cyber keyword triggers were too broad) and added the auto-update mechanism."
+  "notes": "Test bump only, to verify the auto-update mechanism works end-to-end. No code changes."
 }
