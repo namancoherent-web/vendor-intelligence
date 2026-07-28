@@ -1,0 +1,18 @@
+# Fast code-only update on top of the already-built Cloud Run image.
+# Does NOT reinstall Chrome / Playwright / pip — only refreshes app code.
+FROM us-central1-docker.pkg.dev/project-2ab6c3f5-86a7-4aa2-a59/vendor-intel/app:latest
+
+USER root
+WORKDIR /app
+
+COPY app.py run_query.py run_pipeline.py run_auth_api.py ./
+COPY ui ./ui
+COPY src ./src
+COPY config ./config
+COPY queries ./queries
+COPY scripts ./scripts
+COPY crawler ./crawler
+COPY .streamlit ./.streamlit
+
+RUN chown -R appuser:appuser /app
+USER appuser

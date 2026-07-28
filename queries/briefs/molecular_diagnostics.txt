@@ -1,0 +1,30 @@
+Functional Entities in the Global Molecular Diagnostics Market Value Chain
+
+1. Core: Assays, Kits & Reagents
+- Function: Develop and manufacture the molecular assays, test kits, reagents, primers, probes, and controls that detect nucleic acids for infectious-disease, oncology, and genetic testing.
+- Core Entities: Molecular assay and reagent makers (e.g. Bio-Rad Laboratories, QIAGEN, GeneProof, GT Molecular, Amoy Diagnostics, TAAG Genetics, ELITechGroup).
+- Business Model: Recurring per-test kit, reagent, and consumable sales.
+- Market sizing: INCLUDE - the recurring reagent / kit revenue pool, often the largest segment.
+
+2. Core: Instruments, Analyzers & Platforms
+- Function: Design and manufacture the molecular diagnostic instruments and platforms - PCR / qPCR analyzers, sequencing systems, and integrated sample-to-answer platforms.
+- Core Entities: Platform and instrument makers (e.g. Abbott, BD, Cepheid, F. Hoffmann-La Roche, Illumina, Hologic, QuidelOrtho, DiaSorin, Seegene, BioFire Diagnostics, Biocartis, Tecan, Leica Biosystems, Credo Diagnostics Biomedical, Taiwan Advanced Nanotech).
+- Business Model: Capital equipment sales + service contracts + reagent rental.
+- Market sizing: INCLUDE - core capital equipment.
+
+3. Core: Software & Bioinformatics
+- Function: Provide the analysis, interpretation, and bioinformatics software that turns molecular and sequencing data into clinical results.
+- Core Entities: Molecular data and bioinformatics providers (e.g. SOPHiA GENETICS, Agilent Technologies).
+- Business Model: Software licensing, SaaS, and per-analysis fees.
+- Market sizing: INCLUDE - the data / analysis layer.
+
+4. Adjacent: Others (Services, Support & Distribution)
+- Function: Provide molecular-diagnostics testing services, technical support, and distribution around the products above.
+- Core Entities: Service, support, and diversified diagnostics providers (e.g. Revvity).
+- Business Model: Service fees, support contracts, distribution margin.
+- Market sizing: INCLUDE PARTIALLY - only genuine molecular-diagnostics service / support revenue; exclude pure resale to avoid double counting.
+
+Market sizing scope:
+INCLUDE: Assays, Kits & Reagents; Instruments, Analyzers & Platforms; Software & Bioinformatics - the product and data layers where molecular-diagnostics revenue is captured.
+INCLUDE PARTIALLY: Others (Services & Support) - only molecular-diagnostics-specific service / support revenue.
+EXCLUDE: End users (hospitals, clinical labs, clinicians) and pure distributors that only resell - to avoid double-counting the manufacturer's revenue.

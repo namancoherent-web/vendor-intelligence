@@ -1,0 +1,37 @@
+Market: Global RT-PCR Molecular Diagnostic Market
+Geography: Global
+
+One-line market definition: Market for real-time polymerase chain reaction (RT-PCR) instruments, reagents, consumables, and related services used to detect and quantify nucleic acids in clinical and research settings.
+
+FUNCTIONAL ENTITIES IN THE VALUE CHAIN:
+1. Raw Material & Component Suppliers
+   - Function: Provide generic, cross-industry inputs used to build RT-PCR systems and reagents - bulk plastics, electronic components, and commodity chemicals sold to diagnostic manufacturers.
+   - Core entities: Bulk plastic consumable stock suppliers (e.g., Corning), electronic component makers (e.g., Texas Instruments).
+   - Business model: Sell bulk raw materials or generic components to diagnostic kit and instrument manufacturers.
+   - Market sizing: EXCLUDE - only genuine bulk/commodity inputs sold across many unrelated industries. NOTE: enzymes, master mixes, primers, and probes sold as FINISHED, branded RT-PCR reagents are NOT counted here - they belong to Segment 3 (INCLUDE).
+
+2. RT-PCR Instrument Manufacturers
+   - Function: Design and produce RT-PCR thermal cyclers and detection systems.
+   - Core entities: High-throughput systems (e.g., Roche LightCycler 480, Bio-Rad CFX96, Agilent AriaMx), portable/point-of-care systems (e.g., Cepheid GeneXpert, Abbott ID NOW, Seegene, Maccura), benchtop systems (e.g., Applied Biosystems QuantStudio, Qiagen Rotor-Gene, BD MAX).
+   - Business model: Capital equipment sales, service contracts, and reagent rental agreements.
+   - Market sizing: INCLUDE - instruments are core capital equipment.
+
+3. RT-PCR Reagent & Consumable Manufacturers
+   - Function: Produce finished, branded RT-PCR reagents - master mixes, enzymes, kits, primers, probes, controls - and plastic consumables (plates, tubes, seals) sold per test. This is the largest revenue segment and includes enzyme/master-mix makers whose products are sold FOR RT-PCR (not as bulk raw material).
+   - Core entities: Master-mix and kit manufacturers (e.g., Thermo Fisher TaqMan, Qiagen QuantiTect, Bio-Rad iTaq, Promega GoTaq, PCR Biosystems qPCRBIO, Meridian Lyo-Ready, Merck KGaA / Sigma-Aldrich KiCqStart, Bioneer AccuPower, GenScript, Maccura), probe/primer suppliers (e.g., Integrated DNA Technologies, LGC Biosearch), consumable suppliers (e.g., Greiner Bio-One, Sarstedt, Eppendorf).
+   - Business model: Recurring revenue from kit, reagent, and consumable sales per test.
+   - Market sizing: INCLUDE - largest revenue segment; branded enzymes and master mixes count here.
+
+4. Diagnostic Service Providers & Clinical Laboratories
+   - Function: Perform RT-PCR testing for infectious diseases (e.g., COVID-19, HIV, influenza), oncology (e.g., gene expression), and genetic testing.
+   - Core entities: Large reference labs (e.g., Quest Diagnostics, LabCorp), hospital labs (e.g., Mayo Clinic Laboratories), specialized molecular labs (e.g., Eurofins, Sonic Healthcare).
+   - Business model: Fee-for-service per test, often reimbursed by insurers or governments.
+   - Market sizing: INCLUDE PARTIALLY - include only test service revenue; exclude instrument and reagent costs already counted in Segments 2 and 3.
+
+5. End Users (Hospitals, Clinics, Research Institutes)
+   - Function: Purchase and use RT-PCR systems for patient diagnosis or research.
+   - Core entities: Hospital networks (e.g., HCA Healthcare), public health labs (e.g., CDC), academic research centers (e.g., Harvard Medical School).
+   - Business model: Budget allocation for diagnostics; not a revenue-generating entity.
+   - Market sizing: EXCLUDE - end users are buyers, not market participants.
+
+WHICH ENTITIES TO INCLUDE IN MARKET SIZING: The market size includes revenue from RT-PCR instrument manufacturers (Segment 2) and reagent/consumable manufacturers (Segment 3) - the latter explicitly covers makers of branded enzymes, master mixes, kits, primers, and probes sold for RT-PCR, which are core market participants and the largest revenue pool. Diagnostic service providers (Segment 4) are partially included - only their test service revenue, excluding instrument and reagent costs already counted in Segments 2 and 3, to avoid double counting. Only genuine bulk/commodity raw materials and generic components (Segment 1) and end users (Segment 5) are excluded.

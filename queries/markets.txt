@@ -1,0 +1,26 @@
+# Vendor Intelligence — market query batch
+# Format: query | country/region  (omit | for global)
+# Lines starting with # are skipped.
+#
+# Strategy: run GLOBAL first (broad landscape). Add regional rows when you need
+# HQ/presence focus for NA, Europe, LATAM, APAC, or MENA.
+
+# --- Core markets (global) ---
+Bio Based Ethylene Market | global
+Atomic Clock Market | global
+NC G-code Simulation Market | global
+Smart Distributed Wind Infrastructure Market | global
+Digital Signage System Market | global
+ERP vendors | global
+medical device coating | global
+
+# --- Geo-specific (from your list) ---
+aluminium cladding brands | Europe
+
+# --- Optional regional passes (uncomment when needed) ---
+# Bio Based Ethylene Market | Europe
+# Bio Based Ethylene Market | North America
+# ERP vendors | Europe
+# ERP vendors | North America
+# medical device coating | Europe
+# Smart Distributed Wind Infrastructure Market | Europe

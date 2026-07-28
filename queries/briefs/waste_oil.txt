@@ -1,0 +1,47 @@
+Market: Waste Oil Market
+Geography: Global
+
+What are the different entities in the Waste Oil Market value chain based on functionality,
+and which should be considered for market sizing? This market covers the collection,
+aggregation, processing, recycling, and re-refining of used/waste oil into recovered base oil
+and recycled fuel products.
+
+FUNCTIONAL ENTITIES IN THE VALUE CHAIN (these are the segments to INCLUDE and profile):
+
+1. Lubricant Manufacturers / Waste Oil Generators
+   - Function: produce lubricants and generate used/waste oil through automotive, industrial,
+     marine, construction, mining, and machinery operations.
+   - Core entities: lubricant manufacturers, automotive service centers, fleet operators,
+     garages, industrial plants, manufacturing facilities, power plants, marine operators.
+   - Market sizing: partial — use for waste-oil feedstock VOLUME; exclude their virgin
+     lubricant sales revenue to avoid overstatement.
+
+2. Used Oil Collection / Aggregation Companies
+   - Function: collect, transport, store, test, and aggregate used oil from many generation
+     points before recycling/re-refining/fuel processing.
+   - Core entities: licensed used-oil collectors, waste management companies, oil recovery
+     service providers, collection depots, aggregators, logistics providers.
+   - Market sizing: INCLUDE (first monetized layer) — collection/handling fees + resale.
+
+3. Waste Oil Processing / Re-Refining Companies
+   - Function: treat used oil via dehydration, filtration, distillation, vacuum distillation,
+     hydrotreating, solvent extraction, and clay treatment to recover base oil, fuel oil, and
+     by-products.
+   - Core entities: waste-oil recyclers, re-refiners, used-oil treatment plants, base-oil
+     recovery companies, industrial oil recycling operators.
+   - Market sizing: PRIMARY CORE SEGMENT — treatment/gate fees + re-refined base oil sales +
+     recycled fuel oil sales.
+
+4. Recovered Oil / Base Oil Utilization / Downstream Offtake Companies
+   - Function: purchase and use re-refined base oil, recycled fuel oil, and recovered oil in
+     lubricant blending, industrial heating, marine fuels, and refinery feedstock.
+   - Core entities: lubricant blenders, oil marketers, industrial fuel users, refineries,
+     petrochemical companies, marine fuel suppliers.
+   - Market sizing: include only the PURCHASE VALUE of recovered/re-refined products, not the
+     full company revenue.
+
+Include for the company landscape: all four segments above.
+Treated for sizing only (do NOT double-count): count the final monetized processed-oil value
+(re-refined base oil / recycled fuel oil / collection-treatment service revenue).
+Out of scope (exclude): virgin lubricant manufacturing revenue; recycling equipment / plant /
+EPC technology providers; regulatory, compliance and environmental testing consultants.

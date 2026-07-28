@@ -1,0 +1,11 @@
+# Phase 1 batch — run:
+#   .venv\Scripts\python.exe test_phase1.py --file queries\phase1_validate.txt
+
+Bio Based Ethylene Market | global
+Atomic Clock Market | global
+NC G-code Simulation Market | global
+Smart Distributed Wind Infrastructure Market | global
+Digital Signage System Market | global
+ERP vendors | global
+aluminium cladding brands | Europe
+medical device coating | global

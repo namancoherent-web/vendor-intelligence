@@ -1,0 +1,37 @@
+# Optional second Cloud Run service — SearXNG search backup
+#
+# Deploy image searxng/searxng (or your mirrored Artifact Registry copy)
+# then set SEARXNG_BASE_URL on the main app to this service URL.
+#
+# Note: SearXNG on Cloud Run may hit outbound IP / rate-limit issues.
+# Prefer a small always-on VM for SearXNG if search quality matters.
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: vendor-intel-searxng
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "2"
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      containerConcurrency: 20
+      timeoutSeconds: 300
+      containers:
+        - image: searxng/searxng:latest
+          ports:
+            - name: http1
+              containerPort: 8080
+          resources:
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          env:
+            - name: GRANIAN_WORKERS
+              value: "2"
+            - name: GRANIAN_THREADS
+              value: "2"

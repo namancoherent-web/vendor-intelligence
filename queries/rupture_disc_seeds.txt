@@ -1,0 +1,20 @@
+# Brazil Rupture Disc Market — must-have companies (from the client sample report's Key Players).
+# Loaded via --seeds-file so the run command stays clean for the CEO presentation.
+BS&B Safety Systems
+Continental Disc Corporation
+Fike Corporation
+ZOOK Enterprises
+REMBE GmbH
+Emerson
+Donadon SDD
+Technetics Group
+Striko Verfahrenstechnik
+Halma PLC
+Parker Hannifin
+HYDAC International
+Mersen
+V-TEX
+Spirax Sarco
+Danfoss
+Digisensor Sistemas
+BasCo

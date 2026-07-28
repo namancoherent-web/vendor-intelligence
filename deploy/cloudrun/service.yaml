@@ -1,0 +1,89 @@
+# Google Cloud Run — Vendor Intelligence Streamlit app
+#
+# Prerequisites:
+#   - Artifact Registry image pushed (see CLOUD_RUN.md)
+#   - Cloud SQL Postgres instance + DATABASE_URL secret
+#   - Optional: SearXNG Cloud Run service URL in SEARXNG_BASE_URL
+#
+# Deploy:
+#   gcloud run services replace deploy/cloudrun/service.yaml --region=REGION
+# Or use the gcloud run deploy command in CLOUD_RUN.md (easier for secrets).
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: vendor-intel
+  labels:
+    cloud.googleapis.com/location: REGION
+  annotations:
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        # Keep one warm instance for long interactive runs
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "5"
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/execution-environment: gen2
+        # Sticky sessions — Streamlit + in-memory job registry must stay on
+        # the same instance for the life of a browser WebSocket / long run.
+        run.googleapis.com/sessionAffinity: "true"
+        # Replace with your Cloud SQL connection name:
+        # run.googleapis.com/cloudsql-instances: PROJECT_ID:REGION:INSTANCE_NAME
+        run.googleapis.com/cloudsql-instances: PROJECT_ID:REGION:INSTANCE_NAME
+    spec:
+      # Streamlit needs many concurrent HTTP requests (WebSocket + JS/CSS chunks).
+      # concurrency=1 caused "Rate exceeded" and Failed to fetch Metric.*.js.
+      containerConcurrency: 40
+      timeoutSeconds: 3600
+      serviceAccountName: vendor-intel-runner@PROJECT_ID.iam.gserviceaccount.com
+      containers:
+        - image: REGION-docker.pkg.dev/PROJECT_ID/vendor-intel/app:latest
+          ports:
+            - name: http1
+              containerPort: 8080
+          resources:
+            limits:
+              cpu: "2"
+              memory: 4Gi
+          env:
+            - name: PORT
+              value: "8080"
+            - name: USE_MOCK_DATA
+              value: "false"
+            - name: WEB_FETCH_ENABLED
+              value: "true"
+            - name: SELENIUM_HEADLESS
+              value: "true"
+            - name: CHROME_BINARY_PATH
+              value: /usr/bin/google-chrome-stable
+            - name: SEARCH_BACKUP
+              value: searxng
+            - name: MARKET_QUERY_OUTPUT_DIR
+              value: output/demo
+            - name: AUTH_ALLOWED_EMAIL_DOMAINS
+              value: coherentmarketinsights.com
+            - name: AUTH_SKIP_OTP
+              value: "true"
+            # Durable Excel/Word + search history (replace with your bucket):
+            # - name: GCS_BUCKET
+            #   value: vendor-intel-runs-PROJECT_NUMBER
+            # Prefer Secret Manager in real deploy (see CLOUD_RUN.md):
+            # - name: DATABASE_URL
+            #   valueFrom:
+            #     secretKeyRef:
+            #       key: latest
+            #       name: DATABASE_URL
+          startupProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 18
+          livenessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8080
+            periodSeconds: 30

@@ -1,0 +1,27 @@
+Functional Entities in the Drone Battery Value Chain
+
+1. Upstream: Cell Materials & Component Suppliers
+- Function: Producing the raw electrochemical inputs - cathode/anode active materials, silicon anodes, electrolytes, separators, foils.
+- Core Entities: Lithium / nickel / cobalt / silicon-anode material suppliers and separator/electrolyte makers.
+- Business Model: B2B bulk material supply to cell manufacturers.
+
+2. Core: Drone Battery Cell & Power-Source Manufacturers
+- Function: Designing and fabricating the energy sources optimised for UAV weight, power density and discharge - Li-ion, Li-polymer, Li-Sulfur, silicon-anode and solid-state cells, plus hydrogen fuel-cell power systems for drones.
+- Core Entities: High-energy cell makers and drone fuel-cell power-system providers (e.g. Amprius, Sion Power, Intelligent Energy, Doosan Mobility, H3 Dynamics).
+- Business Model: B2B cell / power-system sales to pack makers and drone OEMs.
+
+3. Core: Drone Battery Pack Manufacturers & Integrators
+- Function: Assembling cells into flight-ready packs with battery-management systems, smart charging and ruggedised housings.
+- Core Entities: Pack assemblers and BMS integrators (e.g. EnerSys, Bren-Tronics, Grepow, Inventus Power, RRC Power Solutions).
+- Business Model: B2B pack sales to drone OEMs and defence / enterprise operators.
+
+4. Downstream: Drone OEMs, Operators & Aftermarket
+- Function: Building UAV platforms and flying them; buying batteries as a component; aftermarket replacement sales.
+- Core Entities: Drone manufacturers, commercial / defence drone operators, distributors and resellers.
+- Business Model: Drone hardware sales and flight services.
+
+Market sizing scope:
+INCLUDE: Drone Battery Cell & Power-Source Manufacturers - the cell, advanced-chemistry and fuel-cell power-system makers that supply UAV energy storage.
+INCLUDE: Drone Battery Pack Manufacturers & Integrators - the pack-assembly + BMS layer where the commercial drone-battery price is set.
+EXCLUDE: Upstream raw-material and cell-component suppliers - their revenue belongs in the battery-materials market and would double-count.
+EXCLUDE: Downstream drone OEMs, operators and pure resellers / distributors - they are the drone-platform and services market, not the battery market; counting them inflates the figure.

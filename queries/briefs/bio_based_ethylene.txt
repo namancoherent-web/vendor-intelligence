@@ -1,0 +1,38 @@
+Market: Bio-based Ethylene Market
+Geography: Global
+
+What are the different entities in the Bio-based Ethylene Market value chain based on
+functionality, and which should be considered for market sizing? This market covers renewable
+ethylene produced from bio-feedstocks (sugarcane/bioethanol, waste-based ethanol, and
+captured-carbon ethanol) and its first commercial conversion.
+
+FUNCTIONAL ENTITIES IN THE VALUE CHAIN (these are the segments to INCLUDE and profile):
+
+1. Core Bio-Ethylene & Demonstration Producers
+   - Function: produce bio-based ethylene from renewable feedstocks (ethanol-to-ethylene,
+     CO2-to-ethylene), at commercial and demonstration scale.
+   - Core entities: commercial and demo-scale bio-ethylene producers, ethanol-to-ethylene
+     project developers, integrated sugarcane-to-polymer bio-refineries (e.g. Braskem, LanzaTech).
+   - Market sizing: INCLUDE FULLY — this is the direct production value and the core of the market.
+
+2. Polymer Producers
+   - Function: convert bio-based ethylene into bio-based polymers/derivatives — bio-PE,
+     renewable PE/PP, EVA, ethylene oxide/glycol — for packaging, consumer goods, automotive,
+     healthcare, industrial uses.
+   - Core entities: renewable polymer / resin producers and integrated chemical companies
+     (e.g. Braskem, SABIC, Borealis, Dow, LyondellBasell).
+   - Market sizing: INCLUDE PARTIALLY — only the bio-ethylene-equivalent feedstock value, not the
+     full polymer revenue (avoid double counting across the ethylene->polymer chain).
+
+3. Technology / Future Supply Enablers
+   - Function: provide process technology, catalysts, licensing, and engineering for
+     ethanol-to-ethylene and CO2-to-ethylene routes; enable future capacity.
+   - Core entities: process licensors and technology developers (e.g. Technip Energies /
+     Hummingbird, Axens / Atol, Lummus, LanzaTech).
+   - Market sizing: EXCLUDE from core revenue (capability creation, not ethylene output), but
+     cover in the competitive landscape and future-supply outlook.
+
+Include for the company landscape: all three segments above.
+Sizing principle: value the renewable ethylene molecules at production and first commercial
+conversion point; do not add full downstream polymer revenue or upstream technology-licensing
+revenue (avoid double counting).

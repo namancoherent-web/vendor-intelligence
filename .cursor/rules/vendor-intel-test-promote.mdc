@@ -1,0 +1,28 @@
+---
+description: Vendor Intelligence production Cloud Run — post-promote state
+alwaysApply: true
+---
+
+# Vendor Intel — production (promoted)
+
+## Live
+
+- **Prod URL:** https://vendor-intel-6zevitkldq-uc.a.run.app
+- **Revision:** `vendor-intel-00017-t84` (Next.js + FastAPI, image `:prod-next`)
+- **Test service:** deleted (`vendor-intel-test` gone)
+
+## Scale
+
+- Max **10**, concurrency **8**, affinity **off**, 2 CPU / 4Gi, no CPU throttling
+- Min **3** daytime; Scheduler (Asia/Kolkata):
+  - `vendor-intel-min-day` — `0 8 * * 1-6` → min **3**
+  - `vendor-intel-min-night` — `0 23 * * 1-6` → min **1** (overnight + Sunday stay at 1)
+
+## Product rules (do not regress)
+
+- Username + `@coherentmarketinsights.com`; 1 run/user; 2 pipelines/instance
+- User Stop is final; no Find free server; capacity on Step 1 only
+
+## Never without explicit ask
+
+- Recreate test service / redeploy Streamlit / change prod min-max

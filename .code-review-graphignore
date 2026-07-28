@@ -1,0 +1,12 @@
+# Exclude non-source / heavy dirs from the code-review-graph index.
+.venv/
+.venv-crg/
+.git/
+output/
+data/
+.pytest_cache/
+.streamlit/
+__pycache__/
+*.pyc
+*.egg-info/
+.code-review-graph/

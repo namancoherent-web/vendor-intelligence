@@ -1,0 +1,10 @@
+[browser]
+gatherUsageStats = false
+
+[server]
+headless = true
+# Keep disconnected browser sessions around long enough for a full pipeline
+# run (~20-40+ min). Default (120s) made mid-run reconnects look like logout.
+disconnectedSessionTTL = 14400
+# Keep the WebSocket alive through proxies / Cloud Run load balancers.
+websocketPingInterval = 30

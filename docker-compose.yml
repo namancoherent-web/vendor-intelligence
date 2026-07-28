@@ -1,0 +1,88 @@
+# Full local Docker stack — Streamlit UI (no Node required inside the image).
+# For the simplest laptop path without Docker, use START_STREAMLIT.bat
+# (see LOCAL_SETUP.md).
+#
+#   copy .env.local.example .env   # paste LLM key
+#   docker compose up -d --build
+#   → App:     http://localhost:8501
+#   → SearXNG: http://localhost:8080
+#   → Postgres: localhost:5432
+#
+# This does NOT need GCP. Compose still builds the Streamlit Dockerfile.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vendor-intel-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: vendor
+      POSTGRES_PASSWORD: vendor
+      POSTGRES_DB: vendor_intel
+    volumes:
+      - vendor_intel_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vendor -d vendor_intel"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  searxng:
+    image: searxng/searxng:latest
+    container_name: vendor-intel-searxng
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config/searxng:/etc/searxng:ro
+    environment:
+      - GRANIAN_WORKERS=5
+      - GRANIAN_THREADS=4
+      - GRANIAN_LOG_LEVEL=info
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: vendor-intel:latest
+    container_name: vendor-intel-app
+    ports:
+      - "8501:8080"
+    env_file:
+      - .env
+    environment:
+      PORT: "8080"
+      DATABASE_URL: postgresql+psycopg://vendor:vendor@postgres:5432/vendor_intel
+      SEARXNG_BASE_URL: http://searxng:8080
+      SEARCH_BACKUP: searxng
+      WEB_FETCH_ENABLED: "true"
+      SELENIUM_HEADLESS: "true"
+      CHROME_BINARY_PATH: /usr/bin/google-chrome-stable
+      USE_MOCK_DATA: "false"
+      MARKET_QUERY_OUTPUT_DIR: output/demo
+      # Temporary: no email OTP code — sign in with company email only
+      AUTH_SKIP_OTP: "true"
+      # Override on Cloud Run / hosted DB; local compose uses service DNS above
+    volumes:
+      - vendor_intel_output:/app/output
+    depends_on:
+      postgres:
+        condition: service_healthy
+      searxng:
+        condition: service_started
+    restart: unless-stopped
+    shm_size: "1gb"
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+
+volumes:
+  vendor_intel_pgdata:
+  vendor_intel_output:

@@ -1,0 +1,28 @@
+Functional Entities in the U.S. Aging-in-Place Safety Solutions Value Chain
+
+1. Core: Fall Detection & Personal Emergency Response Providers
+- Function: Detecting falls and emergencies and connecting seniors to help - wearable pendants, medical alert systems (PERS), 24/7 monitoring and response.
+- Core Entities: Medical-alert and fall-detection providers and their monitoring centres (e.g. Medical Guardian, MobileHelp, Bay Alarm Medical, Tunstall Healthcare).
+- Business Model: Device sale + recurring monthly monitoring subscription.
+
+2. Core: Mobility & Assistive Device Manufacturers
+- Function: Making the physical safety and mobility hardware that keeps seniors independent at home - mobility aids, grab/assist devices, accessible-living hardware.
+- Core Entities: Assistive and mobility device makers (e.g. RAZ Mobility, Legrand assisted-living).
+- Business Model: Direct consumer / B2B hardware sales.
+
+3. Core: Senior Care Technology Platforms
+- Function: Remote monitoring, activity / wellness sensing, and connected-care software platforms for aging in place.
+- Core Entities: Senior-care technology and remote-monitoring platform vendors (e.g. CarePredict, Essence Group, Best Buy Health, Aloe Care Health).
+- Business Model: Hardware + SaaS subscription and platform licensing.
+
+4. Downstream / Adjacent: Care Providers, Payers & Retail
+- Function: Delivering care, paying for it, or reselling devices - home-care agencies, insurers / Medicare Advantage payers, and general retailers.
+- Core Entities: Home-care agencies, health insurers / payers, general electronics retailers.
+- Business Model: Care services, reimbursement, retail resale.
+
+Market sizing scope:
+INCLUDE: Fall Detection & PERS Providers - the device + monitoring layer where end-user safety spend is captured.
+INCLUDE: Mobility & Assistive Device Manufacturers - the in-home safety / mobility hardware segment.
+INCLUDE: Senior Care Technology Platforms - the connected-care monitoring and software segment.
+EXCLUDE: Downstream home-care agencies and health insurers / payers - their revenue is the care-delivery and reimbursement market, not the safety-solutions product market.
+EXCLUDE: General retailers that only resell these devices - to avoid double-counting the manufacturer's revenue.

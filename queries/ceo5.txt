@@ -1,0 +1,13 @@
+# CEO 5-query batch — format:  Query | Country | Section1; Section2; ...
+# Run all:  .venv\Scripts\python.exe run_query.py --file queries\ceo5.txt
+# Output:   output/demo/<slug>.csv  (sections + clean Summary)
+
+Drone Battery Market | global | Battery Pack Manufacturers; OEM Battery Manufacturers; BMS Manufacturers; Contract Manufacturer
+
+Seismic Data Processing And Imaging Software Market | global | Integrated Geophysical Surveys Suite Providers; Imaging Software Vendors; Seismic Data Processing Software Vendors; Geophysical Survey Service Providers
+
+Refrigerant-to-Liquid Brazed Plate Heat Exchanger Market | Europe | BPHE Manufacturers (OEMs); Heat Pump Component Suppliers; HVAC & Refrigeration Equipment Manufacturers; Contract Manufacturers
+
+Organic Cosmetic Market | Spain | Organic-Only Cosmetics Manufacturers; Contract Manufacturers/CDMO; Dermocosmetic Manufacturers
+
+Aging In Place Safety Solutions Market | US | Fall Detection & Prevention Solution Providers; Mobility & Assistive Device Manufacturers; Senior Care Technology Platforms Vendors

@@ -1,0 +1,40 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+node_modules/
+frontend/.next/
+.streamlit/secrets.toml
+data/*.db
+data/*.db-*
+frontend/out/
+output/
+output/_searxng*.html
+output/phase2/phase2_hits_*.json
+data/chrome-profile/
+.pytest_cache/
+*.egg-info/
+# code-review-graph (local code intelligence)
+.venv-crg/
+.code-review-graph/
+codegraph.html
+
+# generated deliverables / local artifacts
+output/
+validation_report.txt
+
+# generated deliverables / local artifacts
+output/
+validation_report.txt
+
+# private curated seed lists
+queries/seeds/
+
+# LLM response cache (cost-saving; safe to delete to force fresh calls)
+output/.llm_cache/
+
+# Cross-run discovery store (cumulative union of discovered companies per market)
+output/.discovery_store/
+
+# Wikidata structured-discovery cache (fallback when the live endpoint rate-limits)
+output/.wikidata_cache/

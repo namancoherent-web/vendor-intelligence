@@ -1,0 +1,22 @@
+Functional Entities in the Global Sound Therapy Market Value Chain
+
+1. Core: Sound Therapy Device Manufacturers
+- Function: Design and manufacture the hardware that delivers sound / acoustic therapy for tinnitus, hearing, sleep, and relaxation - hearing aids with tinnitus masking, dedicated sound-therapy and masking devices, and bedside sound-machine hardware.
+- Core Entities: Hearing-device and sound-therapy hardware makers (e.g. Sonova Holding AG, GN Hearing, WS Audiology, Starkey Laboratories, Neuromod Devices, Desyncra Technologies, Sound Oasis, Adaptive Sound Technologies).
+- Business Model: Device sales (B2B / B2C) and hardware + accessory revenue.
+
+2. Core: Sound Therapy Service Providers
+- Function: Deliver sound-therapy programs and tinnitus / hearing care to end users through clinics, audiology networks, and specialist tinnitus-therapy services.
+- Core Entities: Audiology and tinnitus-therapy service providers (e.g. Treble Health, Amplifon, HearingLife, Connect Hearing, Audika, Boots Hearingcare, Specsavers Audiology, Bay Audio).
+- Business Model: Service fees, treatment programs, and care subscriptions.
+
+3. Core: Sound Therapy Software Developers
+- Function: Build the apps and digital therapeutics that deliver sound, tinnitus, sleep, and relaxation therapy on phones and connected devices.
+- Core Entities: Sound-therapy and digital-therapeutics app developers (e.g. Oto, MindEar, Brain.fm, Endel, MedRhythms, Kalmeda, Tinnitracks, BetterSleep).
+- Business Model: App subscriptions, in-app purchases, and digital-therapeutic licensing.
+
+Market sizing scope:
+INCLUDE: Sound Therapy Device Manufacturers - the hardware layer where device revenue is captured.
+INCLUDE: Sound Therapy Service Providers - the clinic / audiology service layer delivering sound therapy.
+INCLUDE: Sound Therapy Software Developers - the app and digital-therapeutics layer.
+EXCLUDE: End users (patients and clinicians who purchase and use these products) and general retailers that only resell devices - to avoid double-counting the manufacturer's and provider's revenue.

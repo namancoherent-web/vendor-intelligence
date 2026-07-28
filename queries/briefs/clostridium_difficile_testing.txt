@@ -1,0 +1,28 @@
+Functional Entities in the U.S. Clostridium difficile (CDI) Testing Value Chain
+
+1. Core: Diagnostic Assay & Test Kit Manufacturers
+- Function: Developing and manufacturing the assays and test kits that detect C. difficile - molecular assays, toxin A/B immunoassays, GDH antigen tests, multiplex GI panels, and reflex testing kits, plus reagents and consumables.
+- Core Entities: CDI assay and kit makers (e.g. TECHLAB, Meridian Bioscience, QuidelOrtho, Fluxus / Fujirebio, Thermo Fisher Scientific, and the assay lines of Cepheid, BD, Roche).
+- Business Model: Sale of assay kits, reagents, controls, calibrators, and recurring consumables to hospitals and laboratories.
+
+2. Core: Diagnostic Instrument & Platform Manufacturers
+- Function: Developing and supplying the analyzers and lab platforms that run CDI testing - molecular analyzers, PCR platforms, immunoassay analyzers, automation, and sample-prep equipment.
+- Core Entities: CDI platform makers (e.g. Cepheid / Danaher, BD, Roche Diagnostics, bioMerieux / BioFire, DiaSorin / Luminex, Hologic, QIAGEN, Abbott).
+- Business Model: Capital equipment sales plus recurring service contracts, maintenance, reagents, and consumables.
+
+3. Core: Commercial & Reference Diagnostic Testing Providers
+- Function: Performing CDI diagnostic testing as a service for hospitals, physician offices, and long-term care facilities via laboratory-based workflows.
+- Core Entities: Commercial and reference laboratories (e.g. Quest Diagnostics, Labcorp, Mayo Clinic Laboratories, ARUP Laboratories, Eurofins Viracor, Sonic Healthcare, HealthTrackRx).
+- Business Model: Fee-for-service testing, reimbursement-based lab services, and contractual testing agreements.
+
+4. Downstream / Adjacent: Healthcare Providers, Distribution & Procurement
+- Function: Purchasing, using, distributing, or facilitating CDI testing products rather than manufacturing them or providing commercial lab testing.
+- Core Entities: Hospitals and hospital labs, physician practices, long-term care and public health labs, distributors, GPOs, IDNs, and logistics providers.
+- Business Model: Healthcare delivery, procurement, distribution, reimbursement, and supply chain management.
+
+Market sizing scope:
+INCLUDE: Diagnostic Assay & Test Kit Manufacturers - assay, reagent, and consumable revenue where CDI test spend is captured.
+INCLUDE: Diagnostic Instrument & Platform Manufacturers - analyzer, platform, and associated service-contract revenue.
+INCLUDE: Commercial & Reference Diagnostic Testing Providers - revenue from performing CDI testing services through commercial and reference lab networks.
+EXCLUDE: Healthcare providers (hospitals, physician offices, long-term care and public health labs) - end users whose revenue belongs to the care-delivery market, not the CDI testing product market.
+EXCLUDE: Distributors and procurement organizations (distributors, GPOs, IDNs, logistics) - they facilitate distribution but do not generate primary CDI testing revenue; including them would double-count the manufacturer's revenue.

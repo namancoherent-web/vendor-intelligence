@@ -1,0 +1,41 @@
+
+Functional Entities in the Satcom Value Chain
+1. Upstream: Manufacturers & Launch Providers
+•	Function: Designing, fabricating, and launching physical space assets.
+•	Core Entities: Satellite Manufacturers (e.g., Thales Alenia Space, Maxar, Lockheed Martin) and Launch Providers (e.g., SpaceX, Blue Origin).
+•	Business Model: Business-to-Business (B2B) hardware sales and fixed-contract aerospace service delivery. [1, 2, 3]
+2. Midstream: Satellite Operators
+•	Function: Flying the satellites, coordinating orbital slots, and managing spectrum frequencies.
+•	Core Entities: Legacy Wholesale Operators (e.g., Arabsat, Avanti, SES) and Vertically Integrated Constellations (e.g., Starlink).
+•	Business Model: Wholesale leasing of raw transponder capacity and raw megahertz spectrum to downstream partners. [1, 2]
+3. Downstream: Ground Segment & Hardware Manufacturers
+•	Function: Creating the physical infrastructure needed to link the space assets to terrestrial networks.
+•	Core Entities: Ground Infrastructure Providers (e.g., Kratos, Gilat) and User Terminal OEMs (e.g., antenna, transceiver, and modem manufacturers).
+•	Business Model: Direct enterprise or consumer hardware sales and Ground-Station-as-a-Service (GSaaS). [1, 2, 3, 4, 5]
+4. Downstream: Network & Service Providers
+•	Function: Managing end-to-end data networks, customer billing, value-added software, and client installations.
+•	Core Entities: Managed Service Providers (e.g., Marlink, Speedcast) and Telecoms/ISPs (e.g., Orange, Vodafone).
+•	Business Model: Recurring subscription revenue, tiered data packages, and enterprise Service Level Agreements (SLAs). [1, 2]
+________________________________________
+Which Entities to Include in a Market Sizing Activity?
+Top-tier research firms like Grand View Research and MarketsandMarkets establish the total Satcom Market Size by capturing total spend across two primary buckets: Equipment and Services. [1, 2]
+┌────────────────────────────────────────────────────────────────────────┐
+│                        CORE SATCOM MARKET SIZE                         │
+├───────────────────────────────────┬────────────────────────────────────┤
+│         EQUIPMENT SEGMENT         │          SERVICES SEGMENT          │
+│              (~40%)               │               (~60%)               │
+├───────────────────────────────────┼────────────────────────────────────┤
+│ • Ground segment hardware         │ • Downstream Service Providers     │
+│ • User terminals & gateway hubs   │ • Integrated direct subscriptions  │
+│ • Antennas, transceivers & modems │ • Value-added enterprise networks  │
+└───────────────────────────────────┴────────────────────────────────────┘
+  Include: Downstream Network & Service Providers (Services Segment) [1]
+The services segment represents roughly 58% to 60% of the entire Satcom industry's value. You must use the revenue generated at this end-user layer because it reflects the final commercial price paid for data. [1]
+  Include: Ground Segment & User Terminals (Equipment Segment)
+Physical infrastructure—such as VSAT terminals, flat-panel antennas, and network hubs—is purchased independently of airtime contracts. This hardware revenue forms the foundation of the Equipment segment. [1, 2]
+  Exclude: Upstream Manufacturers & Launch Providers (Counted Separately)
+Revenue generated from building and launching satellites belongs in the Space Infrastructure Market or Global Launch Market. Including them inside a general Satcom connectivity market size artificially inflates the numbers.
+  Exclude/Consolidate: Midstream Wholesale Operators (Avoid Double Counting) [1]
+If a legacy operator like Arabsat sells wholesale capacity to a provider like Marlink for $1M, and Marlink bundles it to a maritime shipping fleet for $1.5M, the true market size is $1.5M, not $2.5M.
+•	The Rule: Only count the operator's revenue if they sell directly to the end user (like Starlink residential or Arabsat's direct government contracts). Wholesale transponder leasing to other providers must be stripped out of the model.
+

@@ -1,0 +1,82 @@
+Market: Global Remote Elderly Health Monitoring Market
+Geography: Global
+
+What are the different entities in the remote elderly health monitoring value chain based on
+functionality, and which should be considered for market sizing? This market covers technology
+used to monitor seniors' health, safety, and daily activity outside traditional clinical settings
+— spanning RPM platforms, connected sensors, and managed remote-care services aimed at aging
+populations.
+
+FUNCTIONAL ENTITIES IN THE VALUE CHAIN (these are the segments to INCLUDE and profile):
+
+1. Device-Agnostic Platform, Application & Dashboard Providers
+   - Function: Provide the software layer that ingests data from multiple device types and
+     delivers clinical dashboards, care-team workflows, patient apps, alerts, and analytics for
+     remote elderly monitoring — without being tied to a single hardware OEM.
+   - Core entities: RPM / virtual-care platforms, device-agnostic data hubs, and care-coordination
+     software vendors (e.g. Biofourmis, Huma, Validic, Health Recovery Solutions, Life365 Health,
+     Luscii, Sensi.AI, VitalTech, Current Health, CareSimple, VivaSmartCare).
+   - Business model: SaaS platform fees, per-patient-per-month (PPPM) subscriptions, enterprise
+     licensing to health systems / payers, and value-based care enablement.
+   - Market sizing: INCLUDE — platform and application revenue is a core spend bucket; count
+     recurring software / monitoring-service fees paid for elderly remote-care programs.
+
+2. Remote Monitoring Device, Sensor & Managed Care Providers
+   - Function: Supply the physical monitoring layer and/or managed remote-care service for
+     seniors — wearables, ambient sensors, connected hubs, fall / activity detection, vital-sign
+     peripherals, and 24/7 response or care-coordination services bundled with hardware.
+   - Core entities: Elderly-focused sensor and wearable makers, PERS / ambient-monitoring vendors,
+     and managed remote-care providers (e.g. CarePredict, Essence SmartCare, Withings, Tenovi,
+     Tunstall Group, UnaliWear, Vayyar Care, Medsien, Prevounce).
+   - Business model: Device sale or lease + recurring monitoring subscription; B2B2C through
+     payers, home-care agencies, and senior-living operators.
+   - Market sizing: INCLUDE — hardware and bundled managed-care monitoring revenue where the
+     end product is remote elderly health / safety monitoring (not general consumer fitness).
+
+________________________________________
+Which entities to include in a market sizing activity?
+
+Top-tier research firms typically size the remote patient monitoring / elderly monitoring market
+across two primary buckets: Platforms & Software and Devices & Managed Monitoring Services.
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│           GLOBAL REMOTE ELDERLY HEALTH MONITORING MARKET SIZE              │
+├────────────────────────────────────┬───────────────────────────────────────┤
+│   PLATFORMS & SOFTWARE SEGMENT     │   DEVICES & MANAGED CARE SEGMENT      │
+│            (~45–55%)               │              (~45–55%)                │
+├────────────────────────────────────┼───────────────────────────────────────┤
+│ • Device-agnostic RPM platforms    │ • Wearables & ambient sensors         │
+│ • Care-team dashboards & apps      │ • Connected hubs & peripherals        │
+│ • Analytics & alert workflows      │ • Managed monitoring / response       │
+│ • Integration / data aggregation   │ • PERS-style elderly care bundles     │
+└────────────────────────────────────┴───────────────────────────────────────┘
+
+  INCLUDE: Device-Agnostic Platform, Application & Dashboard Providers
+  Count recurring platform, application, and RPM software revenue where the use case is elderly
+  remote health monitoring. These vendors monetize the care-coordination and data layer.
+
+  INCLUDE: Remote Monitoring Device, Sensor & Managed Care Providers
+  Count hardware and bundled managed-monitoring service revenue sold for senior remote care —
+  wearables, ambient sensors, hubs, and monitoring subscriptions tied to elderly health programs.
+
+  EXCLUDE: General acute-care EHR / hospital IT vendors
+  Hospital information systems and generic EHR vendors are adjacent infrastructure, not the
+  remote elderly monitoring product market.
+
+  EXCLUDE: Pure home-care agencies and payers (unless they sell proprietary monitoring tech)
+  Revenue from delivering in-home nursing or insurance claims is the care-delivery / payer
+  market, not the monitoring technology market — unless the entity also sells its own platform
+  or device (then include only that product revenue).
+
+  EXCLUDE / CONSOLIDATE: General consumer fitness wearables with no elderly-care positioning
+  Do not include pure fitness-tracker revenue; only count vendors whose products and GTM are
+  positioned for senior health, RPM, aging-in-place, or managed elderly monitoring.
+
+  EXCLUDE: Pharmaceutical and clinical-trial-only remote monitoring
+  Trial-enablement or drug-adherence tools outside elderly care programs belong in adjacent
+  digital-health segments, not this landscape.
+
+Include for the company landscape: both segments above.
+Sizing principle: capture end-user spend on elderly remote-monitoring technology — platform
+software and device / managed-care bundles — without double-counting payer reimbursement or
+generic hospital IT that does not serve this use case.

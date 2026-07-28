@@ -1,0 +1,53 @@
+# Vendor Intelligence — Next.js frontend + FastAPI BFF (test Cloud Run only).
+# Builds static Next export, layers onto existing Chrome/Python app image.
+#
+# Build (from repo root):
+#   docker build -f Dockerfile.frontend -t us-central1-docker.pkg.dev/PROJECT/vendor-intel/app:test .
+#
+# Deploy test only:
+#   gcloud run services update vendor-intel-test --image=...:test --region=us-central1
+
+# ---- Stage 1: Next.js static export ----
+FROM node:22-bookworm-slim AS frontend-build
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm install
+COPY frontend/ ./
+RUN npm run build
+
+# ---- Stage 2: code update on existing pipeline image ----
+FROM us-central1-docker.pkg.dev/project-2ab6c3f5-86a7-4aa2-a59/vendor-intel/app:latest
+
+USER root
+WORKDIR /app
+
+# Refresh Python app code (same as Dockerfile.code-update)
+COPY app.py run_query.py run_pipeline.py run_auth_api.py ./
+COPY ui ./ui
+COPY src ./src
+COPY config ./config
+COPY queries ./queries
+COPY scripts ./scripts
+COPY crawler ./crawler
+COPY .streamlit ./.streamlit
+COPY api ./api
+
+# Static Next.js export
+COPY --from=frontend-build /frontend/out /app/frontend/out
+
+COPY docker/entrypoint-api.sh /entrypoint-api.sh
+RUN sed -i 's/\r$//' /entrypoint-api.sh \
+ && chmod +x /entrypoint-api.sh \
+ && chown -R appuser:appuser /app /entrypoint-api.sh
+
+ENV FRONTEND_DIST=/app/frontend/out \
+    PYTHONPATH=/app/src:/app
+
+USER appuser
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -fsS "http://127.0.0.1:${PORT:-8080}/health" || exit 1
+
+ENTRYPOINT ["/entrypoint-api.sh"]

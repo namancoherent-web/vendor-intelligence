@@ -1,0 +1,16 @@
+# Test-only image — does NOT retag :latest (prod Cloud Run stays on current digest).
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --platform=linux/amd64
+      - -f
+      - Dockerfile.code-update
+      - -t
+      - us-central1-docker.pkg.dev/project-2ab6c3f5-86a7-4aa2-a59/vendor-intel/app:test
+      - .
+images:
+  - us-central1-docker.pkg.dev/project-2ab6c3f5-86a7-4aa2-a59/vendor-intel/app:test
+timeout: 1200s
+options:
+  logging: CLOUD_LOGGING_ONLY
