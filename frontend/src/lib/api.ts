@@ -32,6 +32,15 @@ export type Me = {
   expires_at: string;
 };
 
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 async function parseError(res: Response): Promise<string> {
   try {
     const data = await res.json();
@@ -59,7 +68,7 @@ export async function api<T>(
     credentials: "include",
   });
   if (!res.ok) {
-    throw new Error(await parseError(res));
+    throw new ApiError(await parseError(res), res.status);
   }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;

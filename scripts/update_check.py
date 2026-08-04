@@ -258,6 +258,18 @@ def run_check(force: bool = False) -> None:
             except Exception:
                 pass
 
+        if remote.get("frontend_changed"):
+            frontend_out = project_root / "frontend" / "out"
+            try:
+                if frontend_out.exists():
+                    shutil.rmtree(frontend_out)
+                print(
+                    "  [update] frontend changed - Web UI will rebuild automatically "
+                    "on the NEXT launch of START_WEB.bat (needs Node/npm)"
+                )
+            except Exception:
+                pass
+
         print(f"  [update] updated successfully to version {remote_v}")
 
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, formatElapsed, type JobStatus, type Me } from "@/lib/api";
+import { api, ApiError, formatElapsed, type JobStatus, type Me } from "@/lib/api";
 import { clearWizard, loadWizard, saveWizard, structureKeyFor } from "@/lib/wizardStore";
 import styles from "./page.module.css";
 
@@ -673,6 +673,20 @@ export default function HomePage() {
     }
   }
 
+  // A 401 here means the browser's session cookie is missing/invalid right now - it does NOT
+  // mean the run failed (the run may have completed hours or days earlier under a session that
+  // has since ended). Re-check the real session via refreshMe() and say so clearly, instead of
+  // dumping the raw "Not signed in" string into the same banner used for actual run errors,
+  // which used to render alongside an unrelated "Complete" result card and read as contradictory.
+  async function handleAuthOrOtherError(err: unknown, fallback: string) {
+    if (err instanceof ApiError && err.status === 401) {
+      await refreshMe();
+      setWizError("Your session has ended. Please sign in again to view or download this result.");
+      return;
+    }
+    setWizError(err instanceof Error ? err.message : fallback);
+  }
+
   async function openDownloads(slug: string) {
     setWizError("");
     setDownloadSlug(slug);
@@ -685,7 +699,7 @@ export default function HomePage() {
         setWizError("No downloadable files found for this run.");
       }
     } catch (err) {
-      setWizError(err instanceof Error ? err.message : "Could not get downloads");
+      await handleAuthOrOtherError(err, "Could not get downloads");
       setDownloadUrls({});
     }
   }
@@ -705,7 +719,7 @@ export default function HomePage() {
       await openDownloads(slug);
     } catch (err) {
       setPreview(null);
-      setWizError(err instanceof Error ? err.message : "Could not open preview");
+      await handleAuthOrOtherError(err, "Could not open preview");
     } finally {
       setPreviewBusy(false);
     }
