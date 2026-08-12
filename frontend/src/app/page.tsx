@@ -11,12 +11,6 @@ type BriefMode = "write" | "generate" | "describe";
 
 type SectionRow = { name: string; content: string };
 
-const CAP_OPTIONS: { id: Cap; title: string; blurb: string }[] = [
-  { id: "focused", title: "Focused", blurb: "~40–50 companies · faster" },
-  { id: "standard", title: "Standard", blurb: "~80–100 companies" },
-  { id: "broad", title: "Broad", blurb: "Largest sweep · longest run" },
-];
-
 const EMAIL_DOMAIN = "@coherentmarketinsights.com";
 
 const PROFILE_PLACEHOLDER =
@@ -39,7 +33,7 @@ export default function HomePage() {
   const [sections, setSections] = useState<SectionRow[]>([{ name: "", content: "" }]);
   const [briefText, setBriefText] = useState("");
   const [structureKey, setStructureKey] = useState("");
-  const [cap, setCap] = useState<Cap>("focused");
+  const [cap] = useState<Cap>("broad");
   const [wizError, setWizError] = useState("");
   const [wizInfo, setWizInfo] = useState("");
   const [sectionsBusy, setSectionsBusy] = useState(false);
@@ -121,7 +115,6 @@ export default function HomePage() {
             setBriefText("");
             setStructureKey("");
           }
-          setCap(saved.cap);
         }
         if (run) {
           try {
@@ -305,7 +298,6 @@ export default function HomePage() {
     setSections([{ name: "", content: "" }]);
     setBriefText("");
     setStructureKey("");
-    setCap("focused");
     setWizError("");
     setWizInfo("");
     window.history.replaceState({}, "", "/");
@@ -322,7 +314,6 @@ export default function HomePage() {
     setSections([{ name: "", content: "" }]);
     setBriefText("");
     setStructureKey("");
-    setCap("focused");
     setWizError("");
     setWizInfo("");
     setDownloadUrls({});
@@ -1133,26 +1124,7 @@ export default function HomePage() {
                 </div>
               </div>
               <p className={styles.hint}>
-                Results save as Excel + Word. Coverage only changes how many companies we search
-                for — quality settings stay the same.
-              </p>
-
-              <label className={styles.label}>How many companies?</label>
-              <div className={styles.capGrid}>
-                {CAP_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    className={cap === opt.id ? styles.capOn : styles.cap}
-                    onClick={() => setCap(opt.id)}
-                  >
-                    <strong>{opt.title}</strong>
-                    <span>{opt.blurb}</span>
-                  </button>
-                ))}
-              </div>
-              <p className={styles.hint}>
-                Fewer companies = faster run. Excel/Word quality rules are unchanged.
+                Results save as Excel + Word.
               </p>
 
               <h3 className={styles.reviewHeading}>Sections to profile</h3>
