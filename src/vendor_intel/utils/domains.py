@@ -1,3 +1,4 @@
+import re
 from urllib.parse import urlparse
 
 
@@ -23,11 +24,43 @@ def domain_from_url(url: str) -> str:
         return ""
 
 
+_LEGAL_SUFFIXES = (
+    "incorporated", "inc",
+    "limited", "ltd",
+    "llc", "llp",
+    "gmbh", "ag", "se",
+    "pvt ltd", "private limited", "pvt", "private",
+    "corporation", "corp",
+    "company", "co",
+    "plc",
+    "s.a", "sa", "s.p.a", "spa",
+    "n.v", "nv", "b.v", "bv",
+    "pty ltd", "pty",
+    "s.l", "sl", "s.r.l", "srl",
+    "k.k", "kk", "kabushiki kaisha",
+    "oy", "oyj", "ab", "as", "a/s",
+)
+
+
 def normalize_name(name: str) -> str:
     n = fix_mojibake(name).strip()
-    for suffix in (" Inc.", " Inc", " Ltd.", " Ltd", " LLC", " GmbH", " Pvt Ltd", " Corporation", " Corp.", " Corp"):
-        if n.endswith(suffix):
-            n = n[: -len(suffix)].strip()
+    # Strip legal-entity suffixes repeatedly (e.g. "Acme Pvt Ltd Co." has two) and normalize
+    # punctuation/spacing so "Acme, Inc." / "Acme Incorporated" / "Acme S.A." / "Acme  Inc" all
+    # converge — this only affects duplicate-detection comparisons, never the displayed name.
+    changed = True
+    while changed:
+        changed = False
+        # Drop trailing punctuation/whitespace before comparing, so "Inc." and "Inc" both match
+        # the same bare suffix, and internal dots in abbreviations (S.A., N.V.) are ignored too.
+        n = re.sub(r"[.,]+$", "", n).strip()
+        core = re.sub(r"\.", "", n)
+        for suffix in _LEGAL_SUFFIXES:
+            # Only strip when the suffix follows an actual preceding word — never let the
+            # whole name (e.g. a company literally named "Corp" or "AB") collapse to empty.
+            if core.lower().endswith(" " + suffix):
+                n = core[: len(core) - len(suffix)].strip()
+                changed = True
+                break
     return n.strip()
 
 

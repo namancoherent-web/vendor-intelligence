@@ -308,12 +308,24 @@ def score_export_row(
         thin_floor = max(0.62, thin_floor - 0.06)
     if not is_vip and conf < min_conf:
         return 0.0, "low_confidence"
-    industry = str(query_context.get("industry") or "").lower()
+    # Check the raw query text AND the market-understanding step's own definition of what this
+    # market actually is — a query worded as "drug distributors" never contains the literal word
+    # "pharma"/"pharmaceutical", even though the market map correctly identifies it as one. Only
+    # checking query_context["industry"] made this off-topic-pharma filter fire on every genuine
+    # pharma company for any distribution/supply-chain-worded query in this industry.
+    industry_blob = " ".join(
+        str(x or "")
+        for x in (
+            query_context.get("industry"),
+            (scope or {}).get("market"),
+            (scope or {}).get("market_definition"),
+        )
+    ).lower()
 
     if (
         _PHARMA_OFF_TOPIC.search(text)
-        and "pharma" not in industry
-        and "pharmaceutical" not in industry
+        and "pharma" not in industry_blob
+        and "pharmaceutical" not in industry_blob
         and not is_vip
     ):
         if _CHEM_COMPANY_HINT.search(f"{name} {domain}"):
@@ -374,16 +386,32 @@ def score_export_row(
     return min(1.0, score), ""
 
 
+
+# Subdomain prefixes that are near-certainly the SAME company/site as the bare root domain
+# (a language/region mirror or a "www"-equivalent), not a genuinely distinct property. Kept
+# deliberately narrow — most other subdomains (shop., blog., careers., a product line, a real
+# subsidiary) are NOT collapsed into the root, since merging those could wrongly treat two
+# distinct real entities as duplicates and drop a real company from the export.
+_SAFE_MIRROR_SUBDOMAINS = frozenset({
+    "www", "www2", "en", "en-us", "en-gb", "global", "corporate", "home", "web",
+})
+
+
 def _export_domain(row: dict[str, Any]) -> str:
     raw = str(row.get("domain") or row.get("website") or "").strip()
     if not raw:
         return ""
     if "://" in raw or raw.startswith("www."):
-        return domain_from_url(raw if "://" in raw else f"https://{raw}")
-    dom = raw.lower()
-    if dom.startswith("www."):
-        dom = dom[4:]
-    return dom.split("/")[0].split("?")[0].strip(".")
+        dom = domain_from_url(raw if "://" in raw else f"https://{raw}")
+    else:
+        dom = raw.lower()
+        if dom.startswith("www."):
+            dom = dom[4:]
+        dom = dom.split("/")[0].split("?")[0].strip(".")
+    parts = dom.split(".")
+    if len(parts) > 2 and parts[0] in _SAFE_MIRROR_SUBDOMAINS:
+        dom = ".".join(parts[1:])
+    return dom
 
 
 def dedupe_export_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:

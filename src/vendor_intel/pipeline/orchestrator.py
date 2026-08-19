@@ -249,19 +249,29 @@ async def run_pipeline(
     discovered_candidates: list[dict] = []
     authoritative_domains: set[str] = set()
 
-    # Widen the REAL-company base from the LLM's own knowledge (what GPT/Google would list) —
-    # the brand-majors plain search misses. Runs even in seed-audit mode (the audit only unpins
-    # the curated seed FILE), so the audit measures whether the system surfaces majors on its own.
-    if not recall and getattr(settings, "pipeline_enumerate_players", True):
+    # LLM enumeration, directory mining, and Wikidata are each independent of one another (none
+    # reads another's output) and were previously run one after another. Each is wrapped as its
+    # own coroutine (sync calls moved to a worker thread via asyncio.to_thread, matching the
+    # pattern Wikidata already used) so asyncio.gather can run all three concurrently instead of
+    # sequentially — same work, same per-block try/except isolation, just overlapped in time.
+    # Each returns its own (new_candidates, new_authoritative_domains, log_lines) rather than
+    # mutating shared state directly, so there's no ordering/mutation subtlety to reason about.
+
+    async def _run_llm_enumeration() -> tuple[list[dict], list[str], list[str]]:
+        cands: list[dict] = []
+        auth: list[str] = []
+        logs: list[str] = []
+        if recall or not getattr(settings, "pipeline_enumerate_players", True):
+            return cands, auth, logs
         try:
             from vendor_intel.clients.claude import ClaudeClient
             from vendor_intel.funnel.market_understanding import enumerate_market_players
-            from vendor_intel.pipeline.plan_seeds import merge_user_seeds_into_scope
 
             section_hints = [
                 str(s).strip() for s in (query_context.get("sections") or []) if str(s).strip()
             ]
-            players = enumerate_market_players(
+            players = await asyncio.to_thread(
+                enumerate_market_players,
                 str(scope.get("market") or query_context.get("industry") or ""),
                 country,
                 section_hints,
@@ -284,7 +294,7 @@ async def run_pipeline(
                 for p in players:
                     dom = str(p.get("primary_domain") or "").lower().removeprefix("www.")
                     if dom and "." in dom:
-                        discovered_candidates.append({
+                        cands.append({
                             "name": str(p.get("canonical_name") or ""),
                             "domain": dom,
                             "company_function": str(p.get("company_function") or ""),
@@ -292,31 +302,34 @@ async def run_pipeline(
                             "is_seed": False,
                         })
                 get_meter().add_market_understanding()
-                print(
+                logs.append(
                     f"  [pipeline] enumerated {len(players)} LLM leads (cap {MAX_LLM_PLAYERS}) — added "
-                    f"as candidates that must pass classification (not auto-kept)",
-                    flush=True,
+                    f"as candidates that must pass classification (not auto-kept)"
                 )
         except Exception as exc:
-            print(f"  [pipeline] player enumeration skipped: {exc}", flush=True)
+            logs.append(f"  [pipeline] player enumeration skipped: {exc}")
+        return cands, auth, logs
 
-    # Directory / listicle / association / exhibitor mining: harvest real companies NAMED on
-    # list pages (the source pages themselves are never added — only the companies on them).
-    if not recall and getattr(settings, "pipeline_directory_mining", True):
+    async def _run_directory_mining() -> tuple[list[dict], list[str], list[str]]:
+        cands: list[dict] = []
+        auth: list[str] = []
+        logs: list[str] = []
+        if recall or not getattr(settings, "pipeline_directory_mining", True):
+            return cands, auth, logs
         try:
             from vendor_intel.clients.claude import ClaudeClient
             from vendor_intel.discovery.directory_mining import mine_directories
+            from vendor_intel.discovery.entity_extract import is_blocked_domain, is_listicle_domain
+            from vendor_intel.pipeline.plan_seeds import resolve_user_seeds
 
             mkt = str(scope.get("market") or query_context.get("industry") or "")
             sec_hints = [str(s).strip() for s in (query_context.get("sections") or []) if str(s).strip()]
             ind_terms = [str(t).strip() for t in (scope.get("industry_terms") or []) if str(t).strip()]
-            mined = mine_directories(
-                mkt, country, sec_hints, settings, ClaudeClient(settings), industry_terms=ind_terms
+            mined = await asyncio.to_thread(
+                mine_directories,
+                mkt, country, sec_hints, settings, ClaudeClient(settings), industry_terms=ind_terms,
             )
             if mined:
-                from vendor_intel.discovery.entity_extract import is_blocked_domain, is_listicle_domain
-                from vendor_intel.pipeline.plan_seeds import resolve_user_seeds
-
                 def _cd(d: str) -> str:
                     d = str(d or "").strip().lower()
                     return d.removeprefix("http://").removeprefix("https://").removeprefix("www.").split("/")[0]
@@ -363,8 +376,8 @@ async def run_pipeline(
                     to_resolve.sort(key=_resolve_rank)
                     _CAP = 90
                     if len(to_resolve) > _CAP:
-                        print(f"  [directory] resolving the top {_CAP} most company-like names "
-                              f"(of {len(to_resolve)} unlinked); obscure tail deferred", flush=True)
+                        logs.append(f"  [directory] resolving the top {_CAP} most company-like names "
+                                    f"(of {len(to_resolve)} unlinked); obscure tail deferred")
                     resolved, _unres = await resolve_user_seeds(to_resolve[:_CAP], settings, country)
                     resolved = [
                         r for r in resolved
@@ -376,28 +389,27 @@ async def run_pipeline(
                 for r in all_dir:
                     dom = _cd(r.get("primary_domain"))
                     if dom and "." in dom:
-                        discovered_candidates.append({
+                        cands.append({
                             "name": str(r.get("canonical_name") or ""),
                             "domain": dom,
                             "company_function": "",
                             "discovery_source": "directory",
                             "is_seed": False,
                         })
-                print(
+                logs.append(
                     f"  [pipeline] directory mining added {len(all_dir)} candidate(s) from list pages "
-                    f"({len(linked)} via the directory's own link, no guess) — must pass classification",
-                    flush=True,
+                    f"({len(linked)} via the directory's own link, no guess) — must pass classification"
                 )
         except Exception as exc:
-            print(f"  [pipeline] directory mining skipped: {exc}", flush=True)
+            logs.append(f"  [pipeline] directory mining skipped: {exc}")
+        return cands, auth, logs
 
-    # Wikidata structured discovery: real organizations from Wikidata (official websites),
-    # NOT LLM recall. Surfaces the regional/obscure tail that never ranks in search or sits on a
-    # listicle. Added as DISCOVERED CANDIDATES (is_seed=False) so they still face relevance
-    # classification — that drops gov/agency noise (NASA, DARPA) semantically. Their domains ARE
-    # authoritative, so they bypass the entity-gate's blunt rules (e.g. a real .gov-hosted
-    # operator like NIGCOMSAT isn't killed by the gov-TLD block).
-    if not recall and getattr(settings, "pipeline_wikidata", True):
+    async def _run_wikidata() -> tuple[list[dict], list[str], list[str]]:
+        cands: list[dict] = []
+        auth: list[str] = []
+        logs: list[str] = []
+        if recall or not getattr(settings, "pipeline_wikidata", True):
+            return cands, auth, logs
         try:
             from vendor_intel.discovery.entity_extract import is_blocked_domain, is_listicle_domain
             from vendor_intel.discovery.wikidata_discovery import discover_via_wikidata
@@ -415,16 +427,25 @@ async def run_pipeline(
                 dom = _cdw(r.get("domain"))
                 if not dom or "." not in dom or is_blocked_domain(dom) or is_listicle_domain(dom):
                     continue
-                discovered_candidates.append(
+                cands.append(
                     {"name": str(r.get("name") or ""), "domain": dom, "company_function": "",
                      "discovery_source": "wikidata", "is_seed": False}
                 )
-                authoritative_domains.add(dom)  # structured-source domains bypass the gate's fuzzy rules
+                auth.append(dom)  # structured-source domains bypass the gate's fuzzy rules
                 wd_n += 1
             if wd_n:
-                print(f"  [pipeline] Wikidata added {wd_n} candidate(s) from structured data (official websites, no guess)", flush=True)
+                logs.append(f"  [pipeline] Wikidata added {wd_n} candidate(s) from structured data (official websites, no guess)")
         except Exception as exc:
-            print(f"  [pipeline] Wikidata discovery skipped: {exc}", flush=True)
+            logs.append(f"  [pipeline] Wikidata discovery skipped: {exc}")
+        return cands, auth, logs
+
+    for _cands, _auth, _logs in await asyncio.gather(
+        _run_llm_enumeration(), _run_directory_mining(), _run_wikidata(),
+    ):
+        discovered_candidates.extend(_cands)
+        authoritative_domains.update(_auth)
+        for line in _logs:
+            print(line, flush=True)
 
     # Persistent cross-run discovery store: re-inject everything this market has discovered before
     # as candidates (is_seed=False) so they're re-crawled + re-classified. Turns per-run volatility
@@ -511,18 +532,36 @@ async def run_pipeline(
     companies, seed_doms = merge_seeds_first(companies, scope)
     # Inject ALL discovered candidates (LLM leads + directory + Wikidata), deduped by domain —
     # discovered, NOT pinned: every one must earn its place through crawl + classification.
+    # LLM-enumerated leads in particular are never fetched/searched before this point (see
+    # enumerate_market_players — "pure LLM, no web search"), so a name+domain pair that was
+    # simply invented or mismatched (e.g. a real company name paired with the wrong company's
+    # domain) needs the same name/domain sanity check organically-discovered candidates already
+    # get elsewhere, before it's allowed to compete for a crawl+classify slot.
     if discovered_candidates:
+        from vendor_intel.discovery.candidate_quality import is_junk_candidate_name
+
         have_dom = {str(c.get("domain") or "").lower().removeprefix("www.") for c in companies}
         add_cand = []
+        dropped_mismatch = 0
         for w in discovered_candidates:
             d = str(w.get("domain") or "").lower().removeprefix("www.")
-            if d and d not in have_dom:
-                have_dom.add(d)
-                add_cand.append(w)
+            if not d or d in have_dom:
+                continue
+            nm = str(w.get("name") or "")
+            if w.get("is_seed"):
+                pass  # curated seeds are exempt, same as everywhere else in the pipeline
+            elif is_junk_candidate_name(nm, d):
+                dropped_mismatch += 1
+                continue
+            have_dom.add(d)
+            add_cand.append(w)
         companies += add_cand
         if add_cand:
             print(f"  [pipeline] injected {len(add_cand)} discovered candidate(s) "
                   f"(LLM/directory/Wikidata) as evidence-judged, not pinned", flush=True)
+        if dropped_mismatch:
+            print(f"  [pipeline] dropped {dropped_mismatch} discovered candidate(s) with "
+                  f"a name/domain mismatch or junk name before they could enter the run", flush=True)
     print(f"  [pipeline] {len(companies)} after seeds merge ({len(seed_doms)} seeds)", flush=True)
 
     # Independent-recall signal for the run summary. ALL curated seeds stay pinned in the final;

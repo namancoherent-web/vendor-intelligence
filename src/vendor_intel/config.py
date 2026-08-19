@@ -106,11 +106,11 @@ class Settings(BaseSettings):
     corporate_events_lookback_days: int = 7
     results_per_query: int = Field(default=25, validation_alias="RESULTS_PER_QUERY")
     target_unique_companies: int = Field(
-        default=280, validation_alias="TARGET_UNIQUE_COMPANIES"
+        default=300, validation_alias="TARGET_UNIQUE_COMPANIES"
     )
-    volume_prompt_count: int = Field(default=36, validation_alias="VOLUME_PROMPT_COUNT")
-    widen_loop_max: int = Field(default=3, validation_alias="WIDEN_LOOP_MAX")
-    widen_if_unique_lt: int = Field(default=250, validation_alias="WIDEN_IF_UNIQUE_LT")
+    volume_prompt_count: int = Field(default=60, validation_alias="VOLUME_PROMPT_COUNT")
+    widen_loop_max: int = Field(default=6, validation_alias="WIDEN_LOOP_MAX")
+    widen_if_unique_lt: int = Field(default=300, validation_alias="WIDEN_IF_UNIQUE_LT")
     verify_top_candidates: int = Field(default=100, validation_alias="VERIFY_TOP_CANDIDATES")
     yield_stop_threshold: float = Field(default=0.05, validation_alias="YIELD_STOP_THRESHOLD")
     low_yield_consecutive: int = Field(default=10, validation_alias="LOW_YIELD_CONSECUTIVE")
@@ -118,7 +118,7 @@ class Settings(BaseSettings):
         default=200, validation_alias="DISCOVERY_YIELD_MIN_UNIQUE"
     )
     discovery_force_widen_below: int = Field(
-        default=100, validation_alias="DISCOVERY_FORCE_WIDEN_BELOW"
+        default=250, validation_alias="DISCOVERY_FORCE_WIDEN_BELOW"
     )
     max_validation_entities: int = Field(default=60, validation_alias="MAX_VALIDATION_ENTITIES")
     phase3_fast_validation: bool = Field(default=True, validation_alias="PHASE3_FAST_VALIDATION")
@@ -188,25 +188,25 @@ class Settings(BaseSettings):
     pipeline_shuffle_export: bool = Field(
         default=False, validation_alias="PIPELINE_SHUFFLE_EXPORT"
     )
-    pipeline_enrich_concurrent: int = Field(default=12, validation_alias="PIPELINE_ENRICH_CONCURRENT")
+    pipeline_enrich_concurrent: int = Field(default=18, validation_alias="PIPELINE_ENRICH_CONCURRENT")
     pipeline_classify_concurrent: int = Field(
-        default=12, validation_alias="PIPELINE_CLASSIFY_CONCURRENT"
+        default=18, validation_alias="PIPELINE_CLASSIFY_CONCURRENT"
     )
-    pipeline_discover_max: int = Field(default=250, validation_alias="PIPELINE_DISCOVER_MAX")
-    pipeline_enrich_max: int = Field(default=250, validation_alias="PIPELINE_ENRICH_MAX")
+    pipeline_discover_max: int = Field(default=650, validation_alias="PIPELINE_DISCOVER_MAX")
+    pipeline_enrich_max: int = Field(default=650, validation_alias="PIPELINE_ENRICH_MAX")
     pipeline_export_min_rows: int = Field(default=0, validation_alias="PIPELINE_EXPORT_MIN_ROWS")
-    pipeline_export_max_rows: int = Field(default=200, validation_alias="PIPELINE_EXPORT_MAX_ROWS")
+    pipeline_export_max_rows: int = Field(default=300, validation_alias="PIPELINE_EXPORT_MAX_ROWS")
     pipeline_global_discover_max: int = Field(
-        default=300, validation_alias="PIPELINE_GLOBAL_DISCOVER_MAX"
+        default=650, validation_alias="PIPELINE_GLOBAL_DISCOVER_MAX"
     )
     pipeline_global_enrich_max: int = Field(
-        default=300, validation_alias="PIPELINE_GLOBAL_ENRICH_MAX"
+        default=650, validation_alias="PIPELINE_GLOBAL_ENRICH_MAX"
     )
     pipeline_global_export_min_rows: int = Field(
         default=0, validation_alias="PIPELINE_GLOBAL_EXPORT_MIN_ROWS"
     )
     pipeline_global_export_max_rows: int = Field(
-        default=240, validation_alias="PIPELINE_GLOBAL_EXPORT_MAX_ROWS"
+        default=300, validation_alias="PIPELINE_GLOBAL_EXPORT_MAX_ROWS"
     )
     pipeline_global_min_export_confidence: float = Field(
         default=0.50, validation_alias="PIPELINE_GLOBAL_MIN_EXPORT_CONFIDENCE"
@@ -215,7 +215,7 @@ class Settings(BaseSettings):
         default=0.48, validation_alias="PIPELINE_GLOBAL_MIN_QUALITY"
     )
     pipeline_global_volume_prompt_count: int = Field(
-        default=26, validation_alias="PIPELINE_GLOBAL_VOLUME_PROMPT_COUNT"
+        default=60, validation_alias="PIPELINE_GLOBAL_VOLUME_PROMPT_COUNT"
     )
     # CHANGED: ddg worker pool
     ddg_worker_count: int = Field(default=0, validation_alias="DDG_WORKER_COUNT")

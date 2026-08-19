@@ -24,9 +24,9 @@ CAP_TIERS: dict[str, dict[str, Any]] = {
     },
     "broad": {
         "label": "Broad",
-        "approx": "~90-160 companies",
-        "time": "~25-40 min",
-        "discover": 340, "enrich": 340, "export": 190, "volume": 46, "widen": 4,
+        "approx": "~150-280 companies",
+        "time": "~40-70 min",
+        "discover": 650, "enrich": 650, "export": 300, "volume": 60, "widen": 6,
     },
     "maximum": {
         "label": "Maximum",

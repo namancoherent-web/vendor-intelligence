@@ -1,6 +1,6 @@
 {
-  "version": "1.1.4",
+  "version": "1.2.0",
   "requirements_changed": false,
-  "frontend_changed": true,
-  "notes": "Removed the 'How many companies?' (Focused/Standard/Broad) picker from Step 3 of the Web UI - every run now always uses the broad/most-thorough setting, with no user choice to reduce it. Web UI users: this needs a rebuild, applied automatically on the launch after the update downloads."
+  "frontend_changed": false,
+  "notes": "Major accuracy fixes: (1) blocked hallucinated/mismatched company name-website pairs from entering a run, (2) fixed off-topic companies slipping past classification when a query's sections were too narrow to bucket a real participant, (3) fixed a real-company rejection bug where genuine manufacturers/distributors could be wrongly marked not-relevant despite correct role detection, (4) fixed an export-time bug that rejected nearly every real pharma company unless the query literally contained the word 'pharma', (5) fixed the market plan's own exclude-keyword list sometimes blocking legitimate value-chain roles like 'manufacturer', (6) raised discovery/classification ceilings so broad-tier runs surface substantially more real companies, (7) parallelized independent discovery steps for speed. Backend-only - no frontend rebuild needed."
 }

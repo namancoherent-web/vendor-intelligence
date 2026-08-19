@@ -5,6 +5,30 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+# Generic value-chain role words — describe a legitimate participant TYPE (a company one step
+# up or down the same chain from what the query is worded around), never an off-topic signal.
+# A market plan for "drug distributors" may list "manufacturer" as out-of-scope to narrow the
+# search, but a real manufacturer is still a genuine part of that market's value chain and must
+# not be hard-excluded just because the query happened to be worded around a different role.
+_VALUE_CHAIN_ROLE_WORDS = frozenset(
+    {
+        "manufacturer",
+        "manufacturers",
+        "distributor",
+        "distributors",
+        "supplier",
+        "suppliers",
+        "wholesaler",
+        "wholesalers",
+        "retailer",
+        "retailers",
+        "exporter",
+        "exporters",
+        "importer",
+        "importers",
+    }
+)
+
 # Universal junk signals (any market)
 _DEFAULT_EXCLUDE = (
     "market report",
@@ -104,6 +128,12 @@ def keyword_profile(
     exclude = _clean_kw_list(scope.get("exclude_keywords"), max_items=16)
     if not exclude:
         exclude = _clean_kw_list(scope.get("negative_keywords"), max_items=16)
+    # A query framed around one part of the value chain (e.g. "drug distributors") can produce
+    # a market plan that lists an ADJACENT role word (e.g. "manufacturer") as out-of-scope,
+    # meaning to narrow the query — but manufacturers/suppliers ARE legitimate participants one
+    # step up the same chain. These generic role words describe a company TYPE, not an off-topic
+    # signal, so they must never act as a hard exclude regardless of what generated the list.
+    exclude = [x for x in exclude if x not in _VALUE_CHAIN_ROLE_WORDS]
     for x in _DEFAULT_EXCLUDE:
         if x not in exclude:
             exclude.append(x)

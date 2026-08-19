@@ -271,6 +271,14 @@ def _is_boilerplate_description(text: str) -> bool:
     return is_weak_role_description(text)
 
 
+_OWNERSHIP_STRUCTURE_NOISE = (
+    "family-owned", "family owned", "privately owned", "private company", "private",
+    "publicly traded", "public company", "public", "government-owned", "state-owned",
+    "employee-owned", "founder-owned", "self-funded", "bootstrapped", "venture-backed",
+    "listed", "unlisted",
+)
+
+
 def _normalize_parent(raw: str, *, name: str, hq: str = "") -> str:
     """CEO-readable ownership — Independent or Acquired by / Subsidiary of."""
     p = re.sub(r"\s+", " ", (raw or "").strip())
@@ -280,6 +288,11 @@ def _normalize_parent(raw: str, *, name: str, hq: str = "") -> str:
     if not p or low in ("not stated", "not stated on website", "unknown", "n/a"):
         return "Independent"
     if low.startswith("independent"):
+        return "Independent" if not hq else f"Independent ({hq})"
+    if low in _OWNERSHIP_STRUCTURE_NOISE:
+        # Describes HOW the company is owned (family/private/public), not WHO owns it — not
+        # an acquisition/subsidiary relationship, so don't force a "Subsidiary of ..." label
+        # out of it (this previously mislabeled genuinely independent companies as acquired).
         return "Independent" if not hq else f"Independent ({hq})"
     if re.search(r"\bacquired by\b", low):
         return p[:120]
@@ -585,6 +598,11 @@ def _llm_confident_inmarket(result: dict[str, Any], kw_prof: Any) -> bool:
     return include_keyword_hits(summary, kw_prof) >= 1
 
 
+_REAL_PARTICIPANT_ROLES = frozenset(
+    {"Manufacturer", "Supplier", "Distributor", "Technology Provider", "Integrator"}
+)
+
+
 def _is_clearly_off_market(
     *,
     score: int,
@@ -592,6 +610,7 @@ def _is_clearly_off_market(
     is_relevant: bool,
     has_section: bool = False,
     llm_strong: bool = False,
+    role: str = "",
 ) -> bool:
     """Only hard-reject obvious junk / zero market fit — do not cut weak-but-related rows.
 
@@ -600,10 +619,19 @@ def _is_clearly_off_market(
     diversified vendors is usually a crawl-quality artifact (nav/cookie chrome), not off-market."""
     if llm_strong:
         return False
+    # A real participant role (the LLM's own verdict from reading the actual page) is an
+    # independent signal that this is a genuine company — checked FIRST, before either the junk
+    # or keyword-score vetoes, since real company sites routinely carry ordinary nav/cookie/login
+    # chrome (that's what the junk penalty measures) and a query framed around one part of the
+    # value chain (e.g. "drug distributors") can generate value_chain_sections too narrow to
+    # bucket a real upstream/adjacent participant (e.g. a manufacturer). Neither of those crawl-
+    # or scope-artifacts should be able to override a role the LLM assigned from real content.
+    if str(role or "").strip() in _REAL_PARTICIPANT_ROLES:
+        return False
     if junk >= 4 and score < 1:
         return True
-    # A negative keyword score vetoes only when the LLM did NOT slot it into a real section.
-    # (Operators/service providers often score negative on adjacent-tech words yet are real.)
+    # A negative keyword score vetoes only when the LLM did NOT slot it into a real section AND
+    # didn't assign a real participant role.
     if score < 0 and not is_relevant and not has_section:
         return True
     return False
@@ -625,8 +653,19 @@ def _potentially_market_related(
         return True
     if signals.get("industry_match"):
         return True
-    # LLM placed it in a real in-scope section → trust that over a negative keyword score.
-    if _has_inscope_section(result):
+    # A real participant role (Manufacturer/Supplier/Distributor/Technology Provider/Integrator
+    # — assigned by the LLM after reading the real page) is an independent signal that a company
+    # genuinely belongs to this market, even when the query's value_chain_sections were scoped
+    # too narrowly to bucket it and the keyword score is negative. Mirrors the same guard in
+    # _is_clearly_off_market so a row rescued from the hard-reject there isn't re-rejected here.
+    if str(result.get("role") or "").strip() in _REAL_PARTICIPANT_ROLES:
+        return True
+    # LLM placed it in a real in-scope section → trust that over a negative keyword score,
+    # UNLESS the score is clearly negative — a section assignment alone (with no other
+    # corroborating signal) isn't enough to rescue a row the keyword score actively flags as
+    # off-market; this narrows the "section is an automatic pass" gap that let some off-topic
+    # companies with a merely-plausible section label slip through as relevant.
+    if _has_inscope_section(result) and score >= 0:
         return True
     return False
 
@@ -833,6 +872,7 @@ async def _strengthen_weak_row(
     if _is_clearly_off_market(
         score=score, junk=junk, is_relevant=bool(result.get("is_relevant")),
         has_section=_has_inscope_section(result), llm_strong=llm_strong,
+        role=str(result.get("role") or ""),
     ):
         result["is_relevant"] = False
         result["confidence"] = min(conf, 0.35)
@@ -863,6 +903,15 @@ async def _strengthen_weak_row(
         result["is_relevant"] = True
         result["confidence"] = max(conf, 0.52 if score >= 1 else 0.48)
 
+    # A real participant role means we already trust this row is relevant on independent
+    # grounds (see _is_clearly_off_market / _potentially_market_related above) — the second-pass
+    # LLM call below can still improve its description/products, but its own fresh is_relevant
+    # verdict must not silently flip an already-protected row back to not-relevant.
+    role_protected = (
+        result.get("is_relevant")
+        and str(result.get("role") or "").strip() in _REAL_PARTICIPANT_ROLES
+    )
+
     if _needs_strengthen(result, score=score, smart_data=smart_data) and client and client.available:
         if _crawl_failed(smart_data) or len(_smart_summary(smart_data)) < 400:
             from vendor_intel.enrichment.smart_enrichment import supplement_crawl
@@ -883,6 +932,8 @@ async def _strengthen_weak_row(
             prior=result,
         )
         if boosted:
+            if role_protected:
+                boosted.pop("is_relevant", None)
             result.update({k: v for k, v in boosted.items() if v is not None and v != ""})
             conf = float(result.get("confidence") or conf)
             if result.get("is_relevant"):

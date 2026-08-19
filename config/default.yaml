@@ -177,19 +177,19 @@ search:
   ddg_worker_count: 2
   ddg_request_delay_min: 3.0
   ddg_request_delay_max: 8.0
-  widen_if_unique_entities_lt: 250
+  widen_if_unique_entities_lt: 300
   yield_stop_threshold: 0.05
   low_yield_consecutive: 10
   discovery_yield_min_unique: 200
-  discovery_force_widen_below: 80
+  discovery_force_widen_below: 250
 
 discovery:
   prompt_count: 12
-  target_unique_companies: 280
+  target_unique_companies: 300
   target_solid_companies: 120
-  volume_prompt_count: 40
-  widen_loop_max: 2
-  verify_top_candidates: 80
+  volume_prompt_count: 60
+  widen_loop_max: 6
+  verify_top_candidates: 100
 
 news:
   providers: [duckduckgo_news, google_alerts, rss]
