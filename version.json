@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "requirements_changed": false,
   "frontend_changed": false,
-  "notes": "Major accuracy fixes: (1) blocked hallucinated/mismatched company name-website pairs from entering a run, (2) fixed off-topic companies slipping past classification when a query's sections were too narrow to bucket a real participant, (3) fixed a real-company rejection bug where genuine manufacturers/distributors could be wrongly marked not-relevant despite correct role detection, (4) fixed an export-time bug that rejected nearly every real pharma company unless the query literally contained the word 'pharma', (5) fixed the market plan's own exclude-keyword list sometimes blocking legitimate value-chain roles like 'manufacturer', (6) raised discovery/classification ceilings so broad-tier runs surface substantially more real companies, (7) parallelized independent discovery steps for speed. Backend-only - no frontend rebuild needed."
+  "notes": "Added FORCE_UPDATE.bat - double-click it any time to check for an update immediately instead of waiting for the once-a-day automatic check. Useful right after a fix ships and you don't want to wait."
 }

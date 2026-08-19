@@ -50,6 +50,7 @@ CODE_ALLOWLIST = [
     "version.json",
     "START_WEB.bat",
     "START_STREAMLIT.bat",
+    "FORCE_UPDATE.bat",
     "setup_local.bat",
     "setup.bat",
     "run.bat",
