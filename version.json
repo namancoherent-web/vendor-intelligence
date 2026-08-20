@@ -1,6 +1,6 @@
 {
-  "version": "1.2.2",
+  "version": "1.2.3",
   "requirements_changed": false,
   "frontend_changed": false,
-  "notes": "Fixed a major slowdown on networks where DuckDuckGo/Google/Mojeek search access is blocked or times out (common on some corporate/ISP networks) - search now tries Bing first instead of last, since it was reliably working while the others failed, so a run no longer pays for several timeouts on every single search. If a run still feels unusually slow, double-click FORCE_UPDATE.bat to grab this immediately."
+  "notes": "Fixed a real bug causing wrong/off-topic companies to leak into results (e.g. unrelated brands getting marked relevant during a second-pass AI check) - verified via real before/after test runs. Fixed a Windows console encoding bug that could silently kill a run mid-way with no useful error. Fixed a couple of smaller accuracy issues (a generic-word check that was hiding some name/website mismatches, and an API key mix-up that was quietly weakening enrichment quality on some setups). Sped up part of the discovery step by batching searches that were running one at a time. Note: overall run time is not meaningfully faster yet - that's still being worked on separately."
 }

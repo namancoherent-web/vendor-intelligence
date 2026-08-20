@@ -1,6 +1,9 @@
 @echo off
 REM Always run from the folder this script lives in
 cd /d "%~dp0"
+REM Force UTF-8 stdio so any non-ASCII log output (em-dashes, checkmarks, etc.) never
+REM crashes a run with a silent UnicodeEncodeError on a fresh Windows console.
+set PYTHONIOENCODING=utf-8
 if not exist "%~dp0app.py" (
   echo ERROR: app.py not found in %~dp0
   pause

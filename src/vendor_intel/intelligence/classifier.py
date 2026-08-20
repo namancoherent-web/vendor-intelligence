@@ -934,6 +934,17 @@ async def _strengthen_weak_row(
         if boosted:
             if role_protected:
                 boosted.pop("is_relevant", None)
+            elif boosted.get("is_relevant") and not result.get("is_relevant"):
+                # The strengthen pass is a second, independent LLM call on thin/ambiguous
+                # crawl data — seen in real runs hallucinating is_relevant=True for clearly
+                # off-market companies (an airline, a motorcycle brand, a tax-filing site,
+                # a grocery e-commerce site), especially when it also assigns role=Other.
+                # Require the same corroborating signal used above (independent keyword-
+                # based market_relevance_score not negative, or an already-strong LLM
+                # in-market read) before trusting a flip from not-relevant to relevant here.
+                if not (llm_strong or score >= 0):
+                    boosted.pop("is_relevant", None)
+                    boosted.pop("confidence", None)
             result.update({k: v for k, v in boosted.items() if v is not None and v != ""})
             conf = float(result.get("confidence") or conf)
             if result.get("is_relevant"):

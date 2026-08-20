@@ -30,6 +30,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 
+# Force UTF-8 stdio — this pipeline prints em-dashes/checkmarks in normal log lines, and
+# on a fresh Windows console (cp1252 default) that raises UnicodeEncodeError mid-print,
+# silently truncating output right where the crash looks like it happened (including
+# cutting off real tracebacks). PYTHONIOENCODING=utf-8 set by the .bat launchers covers
+# the common path; this covers direct `python run_query.py` invocation too.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 def _refresh_output_dir() -> Path:
     global OUTPUT_DIR
     from vendor_intel.pipeline.output_paths import market_query_output_dir

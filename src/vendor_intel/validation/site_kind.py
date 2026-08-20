@@ -283,7 +283,7 @@ _GENERIC_CANONICAL_NAMES = frozenset(
 
 _CORPORATE_SUFFIX = re.compile(
     r"\b(?:ltd\.?|limited|inc\.?|corp\.?|corporation|plc|gmbh|pvt\.?\s*ltd|"
-    r"llp|industries|electronics|technologies|telecom)\b",
+    r"llp)\b",
     re.I,
 )
 
@@ -342,7 +342,9 @@ def name_domain_mismatch(name: str, domain: str) -> bool:
     # First token should often appear in domain for single-brand sites
     first = re.sub(r"[^a-z0-9]", "", low_name.split()[0])
     if len(first) >= 4 and first not in base:
-        if len(low_name.split()) <= 2 and not _CORPORATE_SUFFIX.search(name):
+        # widened from <=2: real short/generic-sounding names ("Acme Noise Control") were
+        # slipping past this guard on a 3-word name with no real legal-entity suffix.
+        if len(low_name.split()) <= 3 and not _CORPORATE_SUFFIX.search(name):
             return True
     return False
 

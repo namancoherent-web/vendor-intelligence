@@ -136,6 +136,14 @@ class FreeSearchRouter:
             prefer not in ("0", "false", "no") and self._searxng_up
         )
         self._skip_ddgs = skip_ddgs(discovery_mode=False)
+        # No cache existed before — every call to search() re-ran the full DDG+fallback
+        # pipeline (with its per-query delay) even when the exact same query had already
+        # been searched earlier in this run (e.g. two discovery prompts producing identical
+        # query text, or a widen pass re-issuing an earlier query). This is a simple
+        # in-memory cache scoped to one FreeSearchRouter instance (one phase's router,
+        # created fresh per phase) — safe because results for the same query+context
+        # shouldn't meaningfully change within that instance's lifetime.
+        self._cache: dict[tuple, list[SearchResult]] = {}
 
     async def _try_searxng(
         self,
@@ -179,6 +187,18 @@ class FreeSearchRouter:
     ) -> list[SearchResult]:
         global _probe_printed
         del after_days
+
+        cache_key = (
+            query.strip().lower(),
+            market.strip().lower(),
+            geo.strip().lower(),
+            search_topic.strip().lower(),
+            discovery_mode,
+            validation_mode,
+        )
+        cached = self._cache.get(cache_key)
+        if cached is not None:
+            return list(cached)
 
         if not is_mock_run(self._settings) and not _probe_printed:
             print_connectivity_report()
@@ -341,15 +361,18 @@ class FreeSearchRouter:
         if len(out) < min_keep:
             min_keep = max(1, len(out))
 
-        return filter_search_results(
-            query,
-            market or query,
-            geo,
-            out,
-            search_topic=search_topic,
-            min_keep=min_keep,
-            require_geo_match=discovery_mode and bool(geo) and geo.lower() != "global",
-        )[: self._num]
+        return self._cache.setdefault(
+            cache_key,
+            filter_search_results(
+                query,
+                market or query,
+                geo,
+                out,
+                search_topic=search_topic,
+                min_keep=min_keep,
+                require_geo_match=discovery_mode and bool(geo) and geo.lower() != "global",
+            )[: self._num],
+        )
 
     async def search_batch(
         self,
@@ -361,7 +384,13 @@ class FreeSearchRouter:
         discovery_mode: bool = False,
     ) -> dict[str, list[SearchResult]]:
         """Parallel discovery searches — same filters as search(), Phase 2 only."""
-        clean = [q.strip() for q in queries if (q or "").strip()]
+        seen_q: set[str] = set()
+        clean: list[str] = []
+        for q in queries:
+            qs = (q or "").strip()
+            if qs and qs not in seen_q:
+                seen_q.add(qs)
+                clean.append(qs)
         if not clean:
             return {}
 

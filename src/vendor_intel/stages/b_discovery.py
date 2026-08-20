@@ -365,11 +365,11 @@ async def _discover_live(
 
     while idx < len(prioritized):
         check_cancelled("discovery")
-        while pending_expansion:
-            ep = pending_expansion.pop(0)
-            await _run_prompt(
-                router, ep, scope=scope, market=market, search_topic=search_topic,
-                geo=geo, hits=hits, tracker=tracker,
+        if pending_expansion:
+            expansion_batch, pending_expansion = pending_expansion, []
+            await _run_prompt_batch(
+                router, expansion_batch, scope=scope, market=market,
+                search_topic=search_topic, geo=geo, hits=hits, tracker=tracker,
             )
 
         batch: list[dict] = []

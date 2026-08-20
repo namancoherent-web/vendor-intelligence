@@ -33,6 +33,29 @@ def _ddgs_timeout() -> int:
 
 _ddg_request_lock = threading.Lock()
 
+# Per-run adaptive backend health: which engine actually works varies by network and
+# even flips over the course of one run (seen directly: brave/google/yahoo/mojeek all
+# failing "No results found" in one probe, then yahoo/bing working a minute later on
+# the same machine). A fixed .env order can't be right for every user's network, so once
+# a backend has failed this many times in a row *this run*, stop trying it for the rest
+# of the run instead of paying its failure cost on every single query.
+_BACKEND_FAIL_THRESHOLD = 3
+_backend_fail_counts: dict[str, int] = {}
+_backend_lock = threading.Lock()
+
+
+def _backend_is_dead(name: str) -> bool:
+    with _backend_lock:
+        return _backend_fail_counts.get(name, 0) >= _BACKEND_FAIL_THRESHOLD
+
+
+def _record_backend_result(name: str, ok: bool) -> None:
+    with _backend_lock:
+        if ok:
+            _backend_fail_counts[name] = 0
+        else:
+            _backend_fail_counts[name] = _backend_fail_counts.get(name, 0) + 1
+
 
 def _ddg_delay_bounds() -> tuple[float, float]:
     try:
@@ -230,19 +253,18 @@ def _search_sync(query: str, max_results: int, *, region: str = "wt-wt") -> list
         for eng in norm_names:
             if eng not in retry_backends:
                 retry_backends.append(eng)
-        # google → bing → duckduckgo (ddg connect often hangs when google is rate-limited)
-        ordered: list[str] = []
-        if "google" in retry_backends:
-            ordered.append("google")
-        if "bing" not in ordered:
-            ordered.append("bing")
-        for eng in retry_backends:
-            if eng not in ordered:
-                ordered.append(eng)
-        retry_backends = ordered
+        # Respect the configured DDGS_BACKENDS/DDG_POOL_BACKENDS order as-is — which
+        # backend is actually reachable/working varies by network and over time (this
+        # used to hardcode google-first, which silently overrode every config/env
+        # change made to fix slow runs, since google is often the one failing).
 
         items = []
-        for eng in retry_backends:
+        live_backends = [eng for eng in retry_backends if not _backend_is_dead(eng)]
+        if not live_backends:
+            # every configured backend has failed repeatedly this run — retry them all
+            # anyway rather than give up outright (conditions can change mid-run).
+            live_backends = retry_backends
+        for eng in live_backends:
             try:
 
                 def _query(ddgs: object, engine: str = eng) -> list:
@@ -260,8 +282,11 @@ def _search_sync(query: str, max_results: int, *, region: str = "wt-wt") -> list
                 if batch:
                     items = batch
                     label = f"ddgs_{eng}"
+                    _record_backend_result(eng, ok=True)
                     break
+                _record_backend_result(eng, ok=False)
             except Exception as exc:
+                _record_backend_result(eng, ok=False)
                 _search_print(
                     f"ddgs.text failed (backend={eng!r}, region={region}): "
                     f"{type(exc).__name__}: {exc}"
