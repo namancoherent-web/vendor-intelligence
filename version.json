@@ -1,6 +1,6 @@
 {
-  "version": "1.2.1",
+  "version": "1.2.2",
   "requirements_changed": false,
   "frontend_changed": false,
-  "notes": "Added FORCE_UPDATE.bat - double-click it any time to check for an update immediately instead of waiting for the once-a-day automatic check. Useful right after a fix ships and you don't want to wait."
+  "notes": "Fixed a major slowdown on networks where DuckDuckGo/Google/Mojeek search access is blocked or times out (common on some corporate/ISP networks) - search now tries Bing first instead of last, since it was reliably working while the others failed, so a run no longer pays for several timeouts on every single search. If a run still feels unusually slow, double-click FORCE_UPDATE.bat to grab this immediately."
 }

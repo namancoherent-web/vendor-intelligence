@@ -44,10 +44,15 @@ BLOCKED_TEXT_BACKENDS: frozenset[str] = frozenset(
     }
 )
 
-# Default when DDGS_BACKENDS is empty / auto / all (never pass "auto" to ddgs — uses Startpage)
+# Default when DDGS_BACKENDS is empty / auto / all (never pass "auto" to ddgs — uses Startpage).
+# Bing first: on networks that block/timeout several of these engines (seen on some corporate
+# and ISP networks — duckduckgo/google/mojeek/startpage all timing out while Bing succeeds every
+# time), every search was paying for multiple ~20s timeouts before reaching a working backend,
+# which compounds across hundreds of searches in a run into hours of pure waiting. Bing first
+# means the common case succeeds immediately; the others still run as fallback if Bing is thin.
 SAFE_TEXT_BACKENDS: tuple[str, ...] = (
-    "duckduckgo",
     "bing",
+    "duckduckgo",
     "brave",
     "mojeek",
     "google",
