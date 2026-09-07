@@ -258,6 +258,23 @@ def _keyword_list(blob: str, limit: int = 24) -> list[str]:
     return out
 
 
+# Small/mid Indian manufacturers rarely write "headquartered in India" (the only pattern
+# _HQ_PATTERNS recognizes) - real user report: "HDPE Jerry Can Market in Europe" kept
+# several genuine Indian manufacturers whose sites only show an Indian address, phone
+# code, or legal-entity phrasing, which produced no hq_country signal at all and the
+# strict-geo filter's "unknown country -> keep" rule let them through. These markers are
+# unambiguous and don't need the full country list, catching the common real-world case.
+_INDIA_SIGNALS = re.compile(
+    r"\+91[\s-]?\d|"
+    r"\bpvt\.?\s*ltd\b|\bprivate\s+limited\b|\bgidc\b|"
+    r"\b(?:gujarat|maharashtra|rajasthan|haryana|punjab|karnataka|tamil\s*nadu|"
+    r"telangana|andhra\s*pradesh|west\s*bengal|uttar\s*pradesh|madhya\s*pradesh)\b|"
+    r"\b(?:ahmedabad|mumbai|bombay|delhi|new\s*delhi|bengaluru|bangalore|chennai|"
+    r"kolkata|pune|hyderabad|surat|vadodara|rajkot|indore|jaipur|noida|gurgaon|gurugram)\b",
+    re.I,
+)
+
+
 def _extract_hq_country(text: str) -> str:
     for pat in _HQ_PATTERNS:
         m = pat.search(text)
@@ -266,8 +283,11 @@ def _extract_hq_country(text: str) -> str:
         loc = m.group(1).strip()
         loc = re.sub(r"\s{2,}", " ", loc)
         loc = loc.split(",")[0].strip()
+        loc = re.split(r"\bsince\b", loc, flags=re.I)[0].strip()
         if len(loc) >= 3:
             return loc[:60]
+    if _INDIA_SIGNALS.search(text):
+        return "india"
     return ""
 
 

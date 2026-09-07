@@ -46,6 +46,12 @@ _DOMAIN_CLASS_RULES: list[tuple[str, list[str]]] = [
         "importyeti", "seair", "eximpedia", "volza",
         "capterra", "g2", "techjockey", "softwaresuggest", "getapp",
         "clutch", "goodfirms",
+        # B2B trade-portal hosting platforms - a subdomain like
+        # "gzhenggang.goldsupplier.com" or "hengjimosu.lefuter.com" is a listing page
+        # on a shared directory, not the company's own site (real bug: these were
+        # exported as if they were the manufacturer's real domain).
+        "goldsupplier", "gongwong", "made-in-china", "globalsources",
+        "alibaba", "lefuter", "everychina", "china-cnmach",
     ]),
     ("ecommerce", [
         "amazon", "flipkart", "snapdeal", "myntra", "shopify",
@@ -67,6 +73,14 @@ _DOMAIN_CLASS_RULES: list[tuple[str, list[str]]] = [
     ("directory", [
         "directory", "listing", "classified", "helpline", "finder",
         "locator", "yellowpage", "sulekha", "olx",
+    ]),
+    ("expired_domain", [
+        # real bug found via a live run: a company's real domain expired and got
+        # resold/parked on one of these domain-marketplace sites, which then got
+        # exported as if it were the company's live website (e.g. "Fustiplast S.p.A."
+        # -> www.dropcatch.com) - these are never a real company's own site.
+        "dropcatch", "sedo", "afternic", "hugedomains", "godaddy",
+        "namecheap", "parkingcrew", "bodis", "above.com",
     ]),
 ]
 
@@ -111,6 +125,7 @@ _DOMAIN_EXACT_CLASS: dict[str, str] = {
 _NON_COMPANY_CLASSES = frozenset({
     "media", "education", "aggregator", "ecommerce",
     "startup_news", "seo_blog", "review", "directory", "finance",
+    "expired_domain",
 })
 
 
@@ -333,7 +348,11 @@ def name_domain_mismatch(name: str, domain: str) -> bool:
     low_name = name.lower().strip()
     if low_name in _GENERIC_CANONICAL_NAMES:
         return True
-    base = domain.lower().split(".")[0].replace("-", "")
+    # Strip a leading protocol/www so "www.nexeoplastics.com" doesn't take "www" as the
+    # brand label (real bug: this alone false-positived every row whose stored Website
+    # value included a www. prefix, e.g. "Nexeoplastics" vs "www.nexeoplastics.com").
+    dom_clean = re.sub(r"^https?://", "", domain.lower().strip()).removeprefix("www.")
+    base = dom_clean.split(".")[0].replace("-", "")
     compact = re.sub(r"[^a-z0-9]", "", low_name)
     if len(compact) < 4:
         return True

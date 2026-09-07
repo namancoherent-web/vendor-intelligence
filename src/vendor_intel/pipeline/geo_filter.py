@@ -47,6 +47,27 @@ _COUNTRY_ALIASES: dict[str, str] = {
     "uae": "uae", "prc": "china",
 }
 
+# _HQ_PATTERNS ("headquartered in X") very often captures a city, not a country name
+# (e.g. "headquartered in Kolkata") - infer_company_country previously discarded any
+# non-country string outright, silently losing the HQ signal for exactly the companies
+# it was extracted for. Major cities for the most common source/target countries only;
+# not exhaustive by design (real user report: Indian manufacturers with city-only HQ
+# text were being kept in a "Europe" run because their real HQ signal got dropped here).
+_CITY_COUNTRY: dict[str, str] = {
+    "kolkata": "india", "calcutta": "india", "mumbai": "india", "bombay": "india",
+    "delhi": "india", "new delhi": "india", "bengaluru": "india", "bangalore": "india",
+    "chennai": "india", "madras": "india", "pune": "india", "hyderabad": "india",
+    "ahmedabad": "india", "surat": "india", "vadodara": "india", "rajkot": "india",
+    "indore": "india", "jaipur": "india", "noida": "india", "gurgaon": "india",
+    "gurugram": "india", "shanghai": "china", "beijing": "china", "shenzhen": "china",
+    "guangzhou": "china", "taipei": "taiwan", "tokyo": "japan", "osaka": "japan",
+    "seoul": "south korea", "sydney": "australia", "melbourne": "australia",
+    "berlin": "germany", "munich": "germany", "hamburg": "germany",
+    "paris": "france", "milan": "italy", "rome": "italy", "madrid": "spain",
+    "barcelona": "spain", "amsterdam": "netherlands", "rotterdam": "netherlands",
+    "london": "united kingdom", "manchester": "united kingdom",
+}
+
 
 def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip().lower()).rstrip(".")
@@ -88,12 +109,31 @@ def infer_company_country(verdict: dict[str, Any], signals: dict[str, Any] | Non
     hq = _norm(str(sig.get("hq_country") or ""))
     hq = _COUNTRY_ALIASES.get(hq, hq)
     if hq:
-        # only trust a recognised country name
+        # only trust a recognised country name, or a major city we can map to one
         known = set(_CCTLD_COUNTRY.values()) | {"united states", "united kingdom", "uae"}
         if hq in known or hq in _EUROPE:
             return hq
+        if hq in _CITY_COUNTRY:
+            return _CITY_COUNTRY[hq]
     domain = str(verdict.get("domain") or verdict.get("website") or "")
-    return _country_from_domain(domain)
+    from_domain = _country_from_domain(domain)
+    if from_domain:
+        return from_domain
+    # Real bug found via live run: a company whose site never states "headquartered in
+    # X" (no hq_country signal) but whose crawl text mentions exactly one country
+    # (signals["mentioned_countries"]) is very likely describing where it actually
+    # operates from, not a foreign market it merely exports to — this is a weaker signal
+    # than hq_country/domain (a note-worthy but rare false-positive risk: a genuinely
+    # foreign-HQ'd exporter whose site only mentions its one target market), so it's only
+    # used as a last resort when nothing stronger was found, not to override a real signal.
+    mentioned = [str(c).strip().lower() for c in (sig.get("mentioned_countries") or [])]
+    mentioned = [_COUNTRY_ALIASES.get(c, c) for c in mentioned if c]
+    if len(set(mentioned)) == 1:
+        only = mentioned[0]
+        known = set(_CCTLD_COUNTRY.values()) | {"united states", "united kingdom", "uae"}
+        if only in known or only in _EUROPE:
+            return only
+    return ""
 
 
 # Terms that indicate operating presence in a country (name + native name + ccTLD).

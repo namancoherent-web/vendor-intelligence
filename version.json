@@ -1,6 +1,6 @@
 {
-  "version": "1.2.5",
+  "version": "1.2.6",
   "requirements_changed": false,
   "frontend_changed": false,
-  "notes": "Follow-up fix from an independent code review of yesterday's changes: multi-word country/region names (e.g. 'South Africa', 'United Arab Emirates') weren't actually being filtered from company descriptions, so words like 'south'/'arab'/'emirates' could still leak through. Also fixed a false-positive where real 3-word company names that use an acronym website (e.g. a company called 'Tata Consultancy Services' at tcs.com) were being wrongly flagged as a name/website mismatch. Note: if your results still look thin or wrong for a market, first double-check your DEEPSEEK_API_KEY in .env is a valid, working key - an invalid key silently degrades results for every run."
+  "notes": "Fixed a real bug (found from a user-reported run) where companies from the wrong country/region kept showing up - e.g. Indian, Chinese, and US companies appearing in a Europe-only market report. The location-detection logic was too narrow (only caught phrases like 'headquartered in X') and missed common real-world cases like an Indian address, phone number, or a company simply mentioning its own country on its site. Also fixed: a couple of company listings pointed at trade-directory pages or an expired/resold domain instead of the company's real website, and a bug where a website starting with 'www.' could cause a real company to be wrongly flagged as suspicious. Reminder: if a run still looks thin or off for a market, first check that your DEEPSEEK_API_KEY in .env is a valid, working key."
 }
