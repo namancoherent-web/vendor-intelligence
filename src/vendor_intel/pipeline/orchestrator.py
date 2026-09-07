@@ -855,9 +855,20 @@ async def run_pipeline(
     # (seeds exempt; companies with no geo signal are kept). Disabled via PIPELINE_STRICT_GEO
     # / --no-geo-filter to keep global players that operate in the target geography.
     if not recall and getattr(settings, "pipeline_strict_geo", True):
-        from vendor_intel.pipeline.geo_filter import geo_mismatch_reason, resolve_target_countries
+        from vendor_intel.pipeline.geo_filter import (
+            geo_mismatch_reason,
+            resolve_target_countries,
+            verify_unknown_geo_companies,
+        )
 
         if resolve_target_countries(country):
+            # Text-based signals (hq_country / mentioned_countries / name / domain) have
+            # a hard ceiling: a real company whose own site never states its country
+            # passes through as "unknown -> keep" no matter how good the regexes are
+            # (verified real case: a company describing only its export markets, never
+            # its actual HQ). One bounded, concurrent live search per still-ambiguous
+            # company closes that gap with real evidence instead of a guess.
+            final = await verify_unknown_geo_companies(final, country, settings)
             kept: list[dict[str, Any]] = []
             geo_dropped: list[dict[str, Any]] = []
             for r in final:

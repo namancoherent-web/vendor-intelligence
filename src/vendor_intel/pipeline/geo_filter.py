@@ -205,3 +205,75 @@ def geo_mismatch_reason(
     if company_country:  # clearly foreign-HQ and no detected presence in target
         return f"geo_mismatch:{company_country}"
     return None  # country unknown and no foreign signal → keep (benefit of the doubt)
+
+
+async def verify_unknown_geo_companies(
+    rows: list[dict[str, Any]], target_geo: str, settings: Any
+) -> list[dict[str, Any]]:
+    """Live HQ lookup for companies the text-based filter couldn't place.
+
+    geo_mismatch_reason's text-based signals (hq_country / mentioned_countries / name /
+    domain) have a hard ceiling: a real company whose own site never states its country
+    can't be caught by any regex (verified case: a company whose summary only said
+    "serving Europe and other regions" while genuinely HQ'd elsewhere). This runs one
+    real web search per still-ambiguous company and fills in signals["hq_country"] from
+    the search results, so geo_mismatch_reason can re-decide with real evidence instead
+    of the "unknown -> keep" default. Only called for the (usually small) subset with no
+    signal at all — bounded, concurrent, so it adds real but limited time to a run.
+    """
+    import asyncio
+
+    from vendor_intel.clients.search_router import FreeSearchRouter
+    from vendor_intel.intelligence.signal_extractor import (
+        _extract_hq_country,
+        _extract_mentioned_countries,
+    )
+
+    targets = resolve_target_countries(target_geo)
+    if not targets:
+        return rows
+
+    ambiguous: list[dict[str, Any]] = []
+    for r in rows:
+        if r.get("is_seed"):
+            continue
+        sig = r.get("signals") or {}
+        if infer_company_country(r, sig):
+            continue  # already resolved by text signals — no lookup needed
+        ambiguous.append(r)
+    if not ambiguous:
+        return rows
+
+    router = FreeSearchRouter(settings)
+
+    async def _verify_one(row: dict[str, Any]) -> None:
+        name = str(row.get("company") or "").strip()
+        if not name:
+            return
+        query = f'"{name}" headquarters country'
+        try:
+            results = await router.search(query, market=name, discovery_mode=False)
+        except Exception as exc:
+            # Don't let one company's lookup failure (network hiccup, a search backend
+            # being down) crash the whole export — but do surface it, since a bare
+            # silent except here previously hid a real UnicodeEncodeError inside the
+            # search router's own logging and made this function look like it ran fine
+            # while actually failing on every call.
+            print(f"  [geo_verify] lookup failed for {name!r}: {type(exc).__name__}: {exc}", flush=True)
+            return
+        blob = " ".join(f"{r.title} {r.snippet}" for r in (results or [])[:5])
+        if not blob.strip():
+            return
+        hq = _extract_hq_country(blob)
+        mentioned = _extract_mentioned_countries(blob)
+        sig = dict(row.get("signals") or {})
+        if hq:
+            sig["hq_country"] = hq
+        if mentioned:
+            sig["mentioned_countries"] = list(
+                {*(sig.get("mentioned_countries") or []), *mentioned}
+            )
+        row["signals"] = sig
+
+    await asyncio.gather(*[_verify_one(r) for r in ambiguous])
+    return rows

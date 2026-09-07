@@ -1,6 +1,6 @@
 {
-  "version": "1.2.7",
+  "version": "1.2.8",
   "requirements_changed": false,
   "frontend_changed": false,
-  "notes": "Follow-up fix after further real-world testing on the wrong-country problem: companies with 'Pvt. Ltd.' / 'Private Limited' in their own name (an Indian company-registration suffix) are now caught by name alone, even when the crawled page gave no other location clue. Also fixed: a company's site saying it serves 'North America' wasn't being read as a non-Europe signal at all, so a real US company slipped through a Europe-only report. These were verified against real companies confirmed via web search to be genuinely non-European. Reminder: if a run still looks thin or off for a market, first check that your DEEPSEEK_API_KEY in .env is a valid, working key."
+  "notes": "Major accuracy fix for wrong-country companies: some real companies never state their own country/city anywhere on their site, so no amount of text-pattern matching could catch them (verified real cases: two companies were confirmed Indian via web search, but nothing in their crawled text said so). The tool now does a real, targeted search for any company it still can't place after all the earlier checks, and uses those results to make the final call - this closes the gap completely for the cases we found, at the cost of a small amount of added time only for the companies that actually need it. Reminder: if a run still looks thin or off for a market, first check that your DEEPSEEK_API_KEY in .env is a valid, working key."
 }
