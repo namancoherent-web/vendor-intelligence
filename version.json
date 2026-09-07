@@ -1,6 +1,6 @@
 {
-  "version": "1.2.3",
+  "version": "1.2.4",
   "requirements_changed": false,
   "frontend_changed": false,
-  "notes": "Fixed a real bug causing wrong/off-topic companies to leak into results (e.g. unrelated brands getting marked relevant during a second-pass AI check) - verified via real before/after test runs. Fixed a Windows console encoding bug that could silently kill a run mid-way with no useful error. Fixed a couple of smaller accuracy issues (a generic-word check that was hiding some name/website mismatches, and an API key mix-up that was quietly weakening enrichment quality on some setups). Sped up part of the discovery step by batching searches that were running one at a time. Note: overall run time is not meaningfully faster yet - that's still being worked on separately."
+  "notes": "Fixed a bug where random unrelated words scraped off a company's website (city names, nationalities, or menu links like 'downloads'/'investors') could end up in the exported description text (e.g. 'Manufacturer of investors'). Note: if your results still look thin or wrong for a market, first double-check your DEEPSEEK_API_KEY in .env is a valid, working key - an invalid key silently degrades results for every run."
 }

@@ -67,6 +67,31 @@ _NAV_UI_TOKENS = frozenset(
         "global",
         "english",
         "language",
+        "investors",
+        "investor",
+        "downloads",
+        "download",
+        "transaction",
+        "transactions",
+        "resources",
+        "resource",
+        "documents",
+        "media",
+        "press",
+        "sitemap",
+        "faq",
+        "faqs",
+        "support",
+        "help",
+        "terms",
+        "conditions",
+        "disclaimer",
+        "accessibility",
+        "cart",
+        "checkout",
+        "account",
+        "subscribe",
+        "newsletter",
     }
 )
 
@@ -84,6 +109,13 @@ def _tokenize_low(text: str) -> list[str]:
 def is_nav_keyword_junk(text: str) -> bool:
     """Comma-separated nav/social tokens masquerading as a product list."""
     tokens = _tokenize_low(text)
+    if not tokens:
+        return False
+    # A single stray word IS the whole "product focus" text in some crawls (e.g. a scraped
+    # nav-link fragment like "investors"/"downloads"/"resources" ends up as the entire
+    # company_function value) - the multi-token ratio check below can't catch that case.
+    if len(tokens) == 1:
+        return tokens[0] in _NAV_UI_TOKENS
     if len(tokens) < 4:
         return False
     nav_hits = sum(1 for t in tokens if t in _NAV_UI_TOKENS)

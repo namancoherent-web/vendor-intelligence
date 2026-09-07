@@ -215,12 +215,37 @@ def _filtered_keywords(words: list[str]) -> list[str]:
     return filter_product_keywords(words)
 
 
+# Real bug (found via a live user-reported run): the blind word regex below picks up
+# ANY 4+ letter word from crawled text, including city/country/nationality names and
+# corporate boilerplate mentioned incidentally (e.g. "headquartered in Rotterdam" or
+# "Italian subsidiary" produced "rotterdam"/"italian" as a fake "product keyword",
+# which then became the exported Functionality text: "Manufacturer of rotterdam").
+# _COUNTRY_NAMES already exists for HQ detection - reuse it here to exclude country
+# names and their common nationality-adjective forms from ever being treated as a
+# product/category keyword.
+_COUNTRY_KEYWORD_STOPWORDS: frozenset[str] = frozenset(
+    {c.lower() for c in _COUNTRY_NAMES}
+    | {
+        "italian", "german", "french", "spanish", "dutch", "polish", "turkish",
+        "ukrainian", "swiss", "austrian", "swedish", "norwegian", "danish",
+        "finnish", "irish", "portuguese", "greek", "romanian", "hungarian",
+        "indian", "chinese", "japanese", "korean", "brazilian", "mexican",
+        "canadian", "australian", "singaporean", "israeli", "taiwanese",
+        "thai", "vietnamese", "indonesian", "malaysian", "russian", "egyptian",
+        "nigerian", "bulgarian", "croatian", "cypriot", "estonian", "latvian",
+        "lithuanian", "slovak", "slovenian", "icelandic", "belgian",
+        "nederlandse", "britain", "british", "america", "american",
+        "europe", "european",
+    }
+)
+
+
 def _keyword_list(blob: str, limit: int = 24) -> list[str]:
     words = re.findall(r"[a-z]{4,}", blob.lower())
     seen: set[str] = set()
     out: list[str] = []
     for w in words:
-        if w in seen or w in _SCHEMA_KEYS:
+        if w in seen or w in _SCHEMA_KEYS or w in _COUNTRY_KEYWORD_STOPWORDS:
             continue
         seen.add(w)
         out.append(w)
