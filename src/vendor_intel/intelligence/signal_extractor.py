@@ -224,7 +224,11 @@ def _filtered_keywords(words: list[str]) -> list[str]:
 # names and their common nationality-adjective forms from ever being treated as a
 # product/category keyword.
 _COUNTRY_KEYWORD_STOPWORDS: frozenset[str] = frozenset(
-    {c.lower() for c in _COUNTRY_NAMES}
+    # _keyword_list only ever tokenizes single words (r"[a-z]{4,}"), so a multi-word
+    # country name like "South Korea" or "United Arab Emirates" must be split into its
+    # constituent words here, or none of them ever match and words like "south"/"arab"/
+    # "emirates" leak straight through as fake keywords (confirmed via direct testing).
+    {w for c in _COUNTRY_NAMES for w in re.findall(r"[a-z]{4,}", c.lower())}
     | {
         "italian", "german", "french", "spanish", "dutch", "polish", "turkish",
         "ukrainian", "swiss", "austrian", "swedish", "norwegian", "danish",

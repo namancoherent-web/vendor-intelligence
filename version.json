@@ -1,6 +1,6 @@
 {
-  "version": "1.2.4",
+  "version": "1.2.5",
   "requirements_changed": false,
   "frontend_changed": false,
-  "notes": "Fixed a bug where random unrelated words scraped off a company's website (city names, nationalities, or menu links like 'downloads'/'investors') could end up in the exported description text (e.g. 'Manufacturer of investors'). Note: if your results still look thin or wrong for a market, first double-check your DEEPSEEK_API_KEY in .env is a valid, working key - an invalid key silently degrades results for every run."
+  "notes": "Follow-up fix from an independent code review of yesterday's changes: multi-word country/region names (e.g. 'South Africa', 'United Arab Emirates') weren't actually being filtered from company descriptions, so words like 'south'/'arab'/'emirates' could still leak through. Also fixed a false-positive where real 3-word company names that use an acronym website (e.g. a company called 'Tata Consultancy Services' at tcs.com) were being wrongly flagged as a name/website mismatch. Note: if your results still look thin or wrong for a market, first double-check your DEEPSEEK_API_KEY in .env is a valid, working key - an invalid key silently degrades results for every run."
 }

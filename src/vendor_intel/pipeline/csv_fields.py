@@ -100,6 +100,20 @@ _GENERIC_VENDOR_PHRASE = re.compile(
     re.I,
 )
 
+# Subset of _NAV_UI_TOKENS safe to reject as junk on their own, with zero surrounding
+# context - unlike "media"/"press"/"checkout"/"account"/"cart"/"support", which are
+# real single-word product/category terms for some industries (a payments company's
+# focus being literally "Checkout", a press manufacturer's being "Press", etc.) and
+# would be wrongly rejected by an unqualified single-word match.
+_UNAMBIGUOUS_NAV_TOKENS = frozenset(
+    {
+        "investors", "investor", "downloads", "download", "transaction",
+        "transactions", "resources", "resource", "sitemap", "faq", "faqs",
+        "disclaimer", "accessibility", "subscribe", "newsletter", "cookie",
+        "cookies", "imprint",
+    }
+)
+
 
 def _tokenize_low(text: str) -> list[str]:
     low = re.sub(r"[^\w\s,]", " ", (text or "").lower())
@@ -112,10 +126,11 @@ def is_nav_keyword_junk(text: str) -> bool:
     if not tokens:
         return False
     # A single stray word IS the whole "product focus" text in some crawls (e.g. a scraped
-    # nav-link fragment like "investors"/"downloads"/"resources" ends up as the entire
-    # company_function value) - the multi-token ratio check below can't catch that case.
+    # nav-link fragment like "investors"/"downloads" ends up as the entire company_function
+    # value) - the multi-token ratio check below can't catch that case. Only the unambiguous
+    # subset is safe to reject with zero context.
     if len(tokens) == 1:
-        return tokens[0] in _NAV_UI_TOKENS
+        return tokens[0] in _UNAMBIGUOUS_NAV_TOKENS
     if len(tokens) < 4:
         return False
     nav_hits = sum(1 for t in tokens if t in _NAV_UI_TOKENS)

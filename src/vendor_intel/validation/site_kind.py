@@ -343,8 +343,15 @@ def name_domain_mismatch(name: str, domain: str) -> bool:
     first = re.sub(r"[^a-z0-9]", "", low_name.split()[0])
     if len(first) >= 4 and first not in base:
         # widened from <=2: real short/generic-sounding names ("Acme Noise Control") were
-        # slipping past this guard on a 3-word name with no real legal-entity suffix.
+        # slipping past this guard on a 3-word name with no real legal-entity suffix. But
+        # this widen alone false-positived real 3-word names that legitimately use an
+        # acronym domain (e.g. "Tata Consultancy Services" -> tcs.com, "Procter Gamble
+        # Co" -> pg.com) - check for that before rejecting.
         if len(low_name.split()) <= 3 and not _CORPORATE_SUFFIX.search(name):
+            from vendor_intel.discovery.candidate_quality import _domain_is_name_acronym
+
+            if _domain_is_name_acronym(name, domain):
+                return False
             return True
     return False
 
