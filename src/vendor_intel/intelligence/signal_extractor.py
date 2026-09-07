@@ -291,10 +291,24 @@ def _extract_hq_country(text: str) -> str:
     return ""
 
 
+# Real bug: "serving industrial packaging needs in North America" (a real company's
+# actual export summary) produced zero mentioned_countries, because "North America" is
+# a region phrase, not a country name in _COUNTRY_NAMES - the strict-geo filter then had
+# no signal at all for a company whose own text plainly says where it operates.
+_REGION_PHRASE_COUNTRY: dict[str, str] = {
+    "north america": "united states",
+    "the americas": "united states",
+}
+
+
 def _extract_mentioned_countries(text: str) -> list[str]:
     low = text.lower()
     found: list[str] = []
     seen: set[str] = set()
+    for phrase, country in _REGION_PHRASE_COUNTRY.items():
+        if country.lower() not in seen and re.search(rf"\b{re.escape(phrase)}\b", low):
+            seen.add(country.lower())
+            found.append(country)
     # Longer names first to avoid partial matches
     for country in sorted(_COUNTRY_NAMES, key=len, reverse=True):
         key = country.lower()

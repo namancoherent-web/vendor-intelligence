@@ -119,6 +119,14 @@ def infer_company_country(verdict: dict[str, Any], signals: dict[str, Any] | Non
     from_domain = _country_from_domain(domain)
     if from_domain:
         return from_domain
+    # Real bug (repeated user reports): several Indian manufacturers never got caught
+    # because hq_country/mentioned_countries were empty for their specific crawl — the
+    # company's own registered legal name is a reliable, always-available signal that
+    # doesn't depend on what the crawler happened to find. "Pvt. Ltd." / "Private
+    # Limited" is an Indian company-law suffix, essentially never used outside India.
+    name = str(verdict.get("company") or verdict.get("name") or "")
+    if re.search(r"\bpvt\.?\s*ltd\b|\bprivate\s+limited\b", name, re.I):
+        return "india"
     # Real bug found via live run: a company whose site never states "headquartered in
     # X" (no hq_country signal) but whose crawl text mentions exactly one country
     # (signals["mentioned_countries"]) is very likely describing where it actually
