@@ -1,6 +1,6 @@
 {
-  "version": "1.2.11",
+  "version": "1.2.12",
   "requirements_changed": false,
   "frontend_changed": false,
-  "notes": "Closed a real gap where a foreign manufacturer (confirmed Indian, via its own .co.in website) still showed up in a Europe-only report just because its site also mentioned some European countries as places it ships to. The rule now is: a company confirmed based outside the target region is dropped, even if it also exports there - a Europe report should mean Europe-based companies. Verified against a real test run: this correctly removed 2 more Indian companies without affecting any genuinely European or genuinely unclear ones. Reminder: if a run still looks thin or off for a market, first check that your DEEPSEEK_API_KEY in .env is a valid, working key."
+  "notes": "Fixed a real case where a genuinely Indonesian company reappeared in a Europe report - its \"own website\" was actually a listing page on ec21.com, a global B2B trade site, and that page's text mixed in unrelated countries from other listings, hiding the one correct signal. Any company whose only web presence is a listing on a trade portal like this (ec21, and the others already recognized) is now correctly skipped before it can slip through, the same as the fix already in place for similar sites. Verified with two full real test runs today, including this exact case. Reminder: if a run still looks thin or off for a market, first check that your DEEPSEEK_API_KEY in .env is a valid, working key."
 }

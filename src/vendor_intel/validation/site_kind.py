@@ -52,6 +52,12 @@ _DOMAIN_CLASS_RULES: list[tuple[str, list[str]]] = [
         # exported as if they were the manufacturer's real domain).
         "goldsupplier", "gongwong", "made-in-china", "globalsources",
         "alibaba", "lefuter", "everychina", "china-cnmach",
+        # Real bug found via live run: "PT Duta Tapanuli Perkasa Ltd" was exported with
+        # rbdcp8cp10.m.ec21.com as its "own" domain - a listing subdomain on ec21.com (a
+        # global B2B trade portal), whose crawled text mixed in unrelated countries from
+        # other listings on the same page (mentioned_countries came back as South Africa/
+        # China/Indonesia together), masking the one real, correct signal.
+        "ec21",
     ]),
     ("ecommerce", [
         "amazon", "flipkart", "snapdeal", "myntra", "shopify",
