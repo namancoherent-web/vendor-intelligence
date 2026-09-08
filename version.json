@@ -1,6 +1,6 @@
 {
-  "version": "1.2.8",
+  "version": "1.2.9",
   "requirements_changed": false,
   "frontend_changed": false,
-  "notes": "Major accuracy fix for wrong-country companies: some real companies never state their own country/city anywhere on their site, so no amount of text-pattern matching could catch them (verified real cases: two companies were confirmed Indian via web search, but nothing in their crawled text said so). The tool now does a real, targeted search for any company it still can't place after all the earlier checks, and uses those results to make the final call - this closes the gap completely for the cases we found, at the cost of a small amount of added time only for the companies that actually need it. Reminder: if a run still looks thin or off for a market, first check that your DEEPSEEK_API_KEY in .env is a valid, working key."
+  "notes": "Fixed a real case where a genuinely non-European manufacturer (confirmed Indonesian) still made it into a Europe-only report even after the new verification search correctly found its real country - the country list the tool checks against was missing Indonesia and about 25 other common manufacturing countries (Vietnam, Thailand, Malaysia, Pakistan, Bangladesh, Saudi Arabia, and more), so a correct search result had nowhere to be matched against. All of those are now recognized, closing this gap. Reminder: if a run still looks thin or off for a market, first check that your DEEPSEEK_API_KEY in .env is a valid, working key."
 }

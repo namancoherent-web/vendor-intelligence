@@ -21,6 +21,20 @@ _CCTLD_COUNTRY: dict[str, str] = {
     "ch": "switzerland", "at": "austria", "be": "belgium", "dk": "denmark",
     "fi": "finland", "no": "norway", "ie": "ireland", "pt": "portugal",
     "cz": "czech republic", "ae": "uae", "za": "south africa", "sg": "singapore",
+    # Real bug found via live run: "PT Duta Tapanuli Perkasa" is genuinely Indonesian
+    # (its own crawled summary said so), and the live geo-verification search correctly
+    # found real search results for it, but Indonesia wasn't in this list at all — so
+    # even a fully successful lookup couldn't result in a drop. This list was built
+    # around the specific countries seen failing so far, not comprehensively; adding the
+    # other common manufacturing-hub countries most likely to show up the same way.
+    "id": "indonesia", "vn": "vietnam", "th": "thailand", "my": "malaysia",
+    "ph": "philippines", "pk": "pakistan", "bd": "bangladesh", "lk": "sri lanka",
+    "eg": "egypt", "sa": "saudi arabia", "il": "israel", "ng": "nigeria",
+    "ar": "argentina", "cl": "chile", "co": "colombia", "pe": "peru",
+    "ua": "ukraine", "gr": "greece", "hu": "hungary", "ro": "romania",
+    "sk": "slovakia", "si": "slovenia", "hr": "croatia", "bg": "bulgaria",
+    "lu": "luxembourg", "ee": "estonia", "lv": "latvia", "lt": "lithuania",
+    "is": "iceland", "nz": "new zealand",
 }
 
 # Region -> member countries (lowercase canonical names)
@@ -127,6 +141,21 @@ def infer_company_country(verdict: dict[str, Any], signals: dict[str, Any] | Non
     name = str(verdict.get("company") or verdict.get("name") or "")
     if re.search(r"\bpvt\.?\s*ltd\b|\bprivate\s+limited\b", name, re.I):
         return "india"
+    # Real bug found via a live run: "Can Pack India Ltd" resolved to canpack.com (the
+    # real, genuinely European Can-Pack S.A.'s domain — likely an Indian subsidiary or
+    # a resolver mismatch sharing the parent's site) with zero other geo signal. A
+    # country name appearing directly in the company's own registered name is itself
+    # reliable evidence of where that specific entity operates, even when it shares a
+    # domain with an unrelated or parent company.
+    known_countries = set(_CCTLD_COUNTRY.values()) | {"united states", "united kingdom", "uae"}
+    for country in sorted(known_countries, key=len, reverse=True):
+        if len(country) >= 4 and re.search(rf"\b{re.escape(country)}\b", name, re.I):
+            return country
+    # A company literally named "... USA LLC" / "... UK Ltd" is common (a real subsidiary
+    # naming convention) and just as strong a signal as the full country name above.
+    for abbr, country in (("usa", "united states"), ("uk", "united kingdom"), ("uae", "uae")):
+        if re.search(rf"\b{abbr}\b", name, re.I):
+            return country
     # Real bug found via live run: a company whose site never states "headquartered in
     # X" (no hq_country signal) but whose crawl text mentions exactly one country
     # (signals["mentioned_countries"]) is very likely describing where it actually
