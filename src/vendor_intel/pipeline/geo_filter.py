@@ -35,6 +35,11 @@ _CCTLD_COUNTRY: dict[str, str] = {
     "sk": "slovakia", "si": "slovenia", "hr": "croatia", "bg": "bulgaria",
     "lu": "luxembourg", "ee": "estonia", "lv": "latvia", "lt": "lithuania",
     "is": "iceland", "nz": "new zealand",
+    # Real cases found via live run: "Nairobi Plastics Ltd." (.co.ke domain) and "Kenpoly
+    # Manufacturers Ltd." (hq_country="Nairobi") both survived a Europe-scoped export with
+    # no drop reason available, since neither Kenya nor its ccTLD nor its capital city were
+    # recognised anywhere in this module.
+    "ke": "kenya",
 }
 
 # Region -> member countries (lowercase canonical names)
@@ -80,6 +85,7 @@ _CITY_COUNTRY: dict[str, str] = {
     "paris": "france", "milan": "italy", "rome": "italy", "madrid": "spain",
     "barcelona": "spain", "amsterdam": "netherlands", "rotterdam": "netherlands",
     "london": "united kingdom", "manchester": "united kingdom",
+    "nairobi": "kenya", "mombasa": "kenya",
 }
 
 
@@ -102,6 +108,10 @@ _MULTI_CCTLD: tuple[tuple[str, str], ...] = (
     (".com.au", "au"), (".co.uk", "uk"), (".org.uk", "uk"), (".co.in", "in"),
     (".com.cn", "cn"), (".co.jp", "jp"), (".com.br", "br"), (".com.mx", "mx"),
     (".co.za", "za"), (".com.sg", "sg"), (".com.tw", "tw"), (".com.tr", "tr"),
+    # Real case: "Nairobi Plastics Ltd." resolves to a .co.ke domain — a two-part ccTLD
+    # like .co.uk/.co.in above, so it needs the same explicit suffix match (a bare
+    # ".ke" regex match on the single-label TLD below only catches ".ke" itself).
+    (".co.ke", "ke"),
 )
 
 
