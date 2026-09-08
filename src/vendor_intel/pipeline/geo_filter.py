@@ -1,10 +1,13 @@
 """Strict geography filter for region-scoped queries.
 
 Drops companies that are *clearly* headquartered outside the requested geography
-(e.g. a Chinese or Australian company in a 'Europe' or 'US' landscape). Conservative
-by design: it only rejects when there is positive evidence of a different country
-(HQ statement or a country-code TLD) AND no evidence of presence in the target.
-Companies with no geo signal are kept (we don't prune on absence). Seeds are exempt.
+(e.g. a Chinese or Australian company in a 'Europe' or 'US' landscape). A confirmed
+non-target HQ (HQ statement or a country-code TLD) is dropped even if the company's
+site also mentions target-geography markets it exports to — a "Europe" report means
+Europe-based companies, not foreign manufacturers who merely ship there too.
+Companies with no geo signal at all are kept (we don't prune on absence); for those,
+a real mention of the target geography is used as a weak "keep" signal since there's
+no confirmed HQ to contradict it. Seeds are exempt.
 """
 from __future__ import annotations
 
@@ -224,11 +227,15 @@ def _operates_in_target(verdict: dict[str, Any], signals: dict[str, Any], target
 def geo_mismatch_reason(
     verdict: dict[str, Any], signals: dict[str, Any] | None, target_geo: str
 ) -> str | None:
-    """Drop a company only if it is clearly foreign AND shows no presence in the target.
+    """Drop a company whose HQ is confirmed outside the target geography.
 
-    Keeps: companies HQ'd in the target, OR that operate/serve there (site mentions the
-    country / native name / ccTLD), OR whose country is unknown. Drops: clearly foreign-HQ
-    companies with no detected presence in the target geography. Seeds are always kept.
+    Keeps: companies HQ'd in the target, OR whose country is unknown (benefit of the
+    doubt — the "operates/serves the target" signal only rescues genuinely ambiguous
+    rows here, since a foreign HQ with no target presence is otherwise indistinguishable
+    from one that merely lists the target as an export market). Drops: any company with
+    a confirmed non-target HQ, even if its site also mentions target-geography markets
+    it exports to — a "Europe" report means Europe-based companies, not foreign
+    manufacturers who ship there too. Seeds are always kept.
     """
     targets = resolve_target_countries(target_geo)
     if not targets:
@@ -237,13 +244,14 @@ def geo_mismatch_reason(
         return None
     sig = signals or verdict.get("signals") or {}
     company_country = infer_company_country(verdict, sig)
-    if company_country and company_country in targets:
-        return None
-    if _operates_in_target(verdict, sig, targets):
-        return None  # serves / operates in the target geography → keep
-    if company_country:  # clearly foreign-HQ and no detected presence in target
+    if company_country:
+        if company_country in targets:
+            return None
+        # Confirmed foreign HQ — drop regardless of export-market mentions.
         return f"geo_mismatch:{company_country}"
-    return None  # country unknown and no foreign signal → keep (benefit of the doubt)
+    if _operates_in_target(verdict, sig, targets):
+        return None  # country unknown but site shows real target presence → keep
+    return None  # country unknown and no target-presence signal → keep (benefit of the doubt)
 
 
 async def verify_unknown_geo_companies(

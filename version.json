@@ -1,6 +1,6 @@
 {
-  "version": "1.2.10",
+  "version": "1.2.11",
   "requirements_changed": false,
   "frontend_changed": false,
-  "notes": "Verified the Indonesia/country-list fix from the last update with a full real test run - it worked correctly. Along the way, found and fixed two more real companies from Kenya (a .co.ke domain and a company whose site said it's based in Nairobi) that were slipping into a Europe-only report the same way - Kenya wasn't recognized yet either. Also double-checked the earlier concern about off-topic companies (unrelated software/tech firms) showing up in reports - a real test run confirmed the tool is already correctly filtering those out, so no change was needed there. Reminder: if a run still looks thin or off for a market, first check that your DEEPSEEK_API_KEY in .env is a valid, working key."
+  "notes": "Closed a real gap where a foreign manufacturer (confirmed Indian, via its own .co.in website) still showed up in a Europe-only report just because its site also mentioned some European countries as places it ships to. The rule now is: a company confirmed based outside the target region is dropped, even if it also exports there - a Europe report should mean Europe-based companies. Verified against a real test run: this correctly removed 2 more Indian companies without affecting any genuinely European or genuinely unclear ones. Reminder: if a run still looks thin or off for a market, first check that your DEEPSEEK_API_KEY in .env is a valid, working key."
 }
