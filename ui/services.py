@@ -598,14 +598,35 @@ class JobRunner:
                     job["result"] = result
                     llm = result.get("llm_usage") or {}
                     elapsed = time.time() - job["started_at"]
+                    # Real bug found live: this previously counted every row in
+                    # relevant_companies, including rows with is_relevant=False (rejected
+                    # during quality/geo filtering) — the run-history card showed "132
+                    # companies" while the actual exported file only had 96 rows, since
+                    # the CSV/XLSX/DOCX writers all filter to is_relevant=True first.
+                    # Count the same way the exporters do so the two numbers agree.
                     append_session_log(
                         {
                             "run_id": run_id,
                             "owner_email": owner_email,
                             "query": market_label,
+                            # Admin visibility: the user's own typed input, unmodified —
+                            # "query" above is the AI-derived market label shown in the
+                            # end-user history UI, which can differ from what the user
+                            # actually typed (e.g. a full sentence vs. the extracted
+                            # market name). raw_query/brief_text preserve the original
+                            # so an admin can audit whether users are writing specific,
+                            # well-formed prompts vs. vague ones.
+                            "raw_query": query,
+                            "brief_text": brief,
                             "country": country,
                             "status": "ok",
-                            "companies_exported": len(result.get("relevant_companies") or []),
+                            "companies_exported": len(
+                                [
+                                    r
+                                    for r in (result.get("relevant_companies") or [])
+                                    if r.get("is_relevant")
+                                ]
+                            ),
                             "elapsed_seconds": round(elapsed, 1),
                             "elapsed_minutes": round(elapsed / 60, 2),
                             "llm_calls": llm.get("llm_calls_total"),

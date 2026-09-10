@@ -199,7 +199,17 @@ def _grouped(rows: list[dict], query_context: dict):
 
     scope = query_context.get("scope") if isinstance(query_context.get("scope"), dict) else None
     mp = main_product_label(query_context, scope)
+    # Follow whichever taxonomy classify_ctx settled on (CEO-typed or market-derived,
+    # see orchestrator.py's classify_ctx build) so this later role-labelling pass
+    # groups companies into the SAME sections they were actually classified against.
+    persisted = [
+        str(s).strip() for s in (query_context.get("value_chain_sections") or []) if str(s).strip()
+    ]
     custom = [str(s).strip() for s in (query_context.get("sections") or []) if str(s).strip()]
+    if persisted:
+        return group_into_sections(
+            rows, persisted, mp, custom=bool(query_context.get("sections_are_custom"))
+        )
     if custom:
         return group_into_sections(rows, custom, mp, custom=True)
     return group_into_sections(rows, build_section_taxonomy(mp), mp)

@@ -38,6 +38,14 @@ Return JSON only — no markdown fences — with this exact schema:
   "is_relevant": true or false,
   "role": "Manufacturer" | "Supplier" | "Distributor" | "Technology Provider" | "Integrator"
         | "Research / Consulting" | "Industry Body" | "Other",
+  "role_label": "A short (2-5 word) MARKET-SPECIFIC display label for what this company actually
+                is, using the vocabulary real people in THIS market use — e.g. 'Grower / Farm' or
+                'Vineyard Cooperative' for an agricultural producer, 'Contract Manufacturer / CDMO'
+                for pharma, 'Base-Oil Offtaker' for a lubricants trader. This is shown to the reader
+                INSTEAD of the generic 'role' value above when it fits better — 'role' itself stays
+                one of the fixed categories for internal grouping, but a real farm should never be
+                internally displayed as a generic 'Manufacturer' when 'Grower / Farm' is available.
+                If nothing market-specific applies, repeat the 'role' value verbatim.",
   "role_description": "Functionality (max 14 words): what this company DOES in the target market — concrete products/applications only.
                        Format: 'Manufacturer of [specific product/system] for [application]'.
                        GOOD: 'Manufacturer of brazed plate heat exchangers for heat pump chillers',
@@ -52,9 +60,23 @@ Return JSON only — no markdown fences — with this exact schema:
               know the name and domain, write one careful sentence and stop.",
   "value_chain_section": "Pick EXACTLY ONE label from query_context.value_chain_sections that
                           best fits this company; if none fit, use 'Other'.",
+  "in_market_boundary": true or false — see MARKET BOUNDARY below,
   "country_match": true or false,
   "confidence": 0.0 to 1.0
 }
+
+MARKET BOUNDARY (in_market_boundary — read market_plan.in_scope and market_plan.out_of_scope):
+- Judge what this company primarily IS/DOES, not every word its page happens to mention.
+  A company that only MENTIONS an out-of-scope concept in passing (e.g. an exporter's page
+  says it "buys from growers" or a trade body's page says it "represents growers") is judged
+  by what IT does (exporting/representing), not by the word "grower" appearing on its page.
+- Set in_market_boundary=false ONLY when the company's own core activity — what it primarily
+  IS — matches an out_of_scope entry (e.g. it IS a grower/farm itself, not a company that
+  merely buys from, sources from, or speaks on behalf of growers).
+- Set in_market_boundary=true for everything else, including companies only loosely matching
+  an in_scope entry — this field is a targeted exclusion for primary producers and similarly
+  out-of-scope entity types the market definition explicitly named, not a second relevance gate.
+- If market_plan.out_of_scope is empty, always set in_market_boundary=true.
 
 VALUE_CHAIN_SECTION (group the company in the market's value chain):
 - Choose ONE bucket verbatim from query_context.value_chain_sections.
@@ -71,8 +93,14 @@ VALUE_CHAIN_SECTION (group the company in the market's value chain):
 - Technology/software vendors → 'Technology Providers'; integrators → 'System Integrators'.
 
 ROLE (assign from what the entity ACTUALLY does on its own site — do NOT default to Manufacturer):
-- Manufacturer: makes/produces finished products itself (own factory/brand/formulations).
-- Distributor: resells/distributes other brands' products; wholesaler; authorized dealer.
+- Manufacturer: makes/produces finished products itself (own factory/brand/formulations). For a
+  primary-production/commodity market (e.g. agriculture), a company that only GROWS/FARMS the raw
+  commodity with no processing/brand of its own is NOT a genuine Manufacturer in this sense —
+  see RELEVANCE below for how such rows should usually be handled (often out of scope entirely).
+- Distributor: resells/distributes other producers' or brands' output; wholesaler; authorized
+  dealer; ALSO covers a commodity trading house, exporter, or importer that buys and resells
+  produce/goods it did not grow or make itself (a grape exporter buying from growers and selling
+  onward is a Distributor in this sense, even though "distributor" isn't the word it uses about itself).
 - Supplier: sells ingredients/raw materials/components to other companies.
 - Technology Provider: software/SaaS/platform/equipment vendor.
 - Research / Consulting: testing labs, consultancies, market-research firms.
@@ -832,6 +860,13 @@ def _merge_llm_landscape_fields(
     )
     result["key_products"] = truncate_key_products(key_products)
     result["role"] = _fix_role_from_signals(str(result.get("role") or ""), signals)
+    # Market-specific display label (e.g. "Grower / Farm" for an agricultural producer)
+    # shown to the reader instead of the generic internal `role` — purely additive,
+    # never overrides `role` itself, which stays the fixed category everything else
+    # (section routing, relevance gating) keys off. Falls back to `role` verbatim if
+    # the LLM didn't return one or returned schema junk.
+    role_label = str(out.get("role_label") or "").strip()
+    result["role_label"] = role_label if (role_label and len(role_label) <= 60) else result["role"]
     return result
 
 
@@ -846,6 +881,7 @@ async def _strengthen_weak_row(
     smart_data: dict[str, Any],
     is_seed: bool,
     industry_kws: list[str],
+    settings: Settings | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     """Recover weak rows via supplement crawl + LLM — only drop clearly off-market junk."""
     from vendor_intel.discovery.company_registry import is_registry_company
@@ -867,6 +903,30 @@ async def _strengthen_weak_row(
 
     if is_seed:
         return result, smart_data, signals
+
+    # Real bug found via a live "Global Grapes Market" run: a genuine grower/farmer got
+    # classified role="Manufacturer" (it produces the raw commodity) and then bypassed
+    # every relevance check unconditionally below, since role membership in
+    # _REAL_PARTICIPANT_ROLES is treated as automatically relevant regardless of the
+    # market's own defined scope. This check runs FIRST and short-circuits before that
+    # role-based override gets a chance to rescue a boundary-excluded company.
+    #
+    # Originally implemented as keyword/regex matching against market_boundary's
+    # out_of_scope phrases — abandoned after live testing repeatedly proved it too
+    # fragile: distinguishing "IS a grower" ("Plantaže... cultivates vineyards... one of
+    # the largest grape growers") from "sources FROM growers" (a real exporter's routine
+    # supplier mention) requires actual language understanding, not pattern matching —
+    # every keyword-threshold/relational-hedge fix that caught one real case broke
+    # another. The LLM already reads the full company text for every other field in this
+    # same call, so it directly judges in_market_boundary as part of that call instead
+    # (see _SYSTEM_QUALITY's MARKET BOUNDARY instructions) — no separate heuristic layer.
+    # Gated behind a settings flag until validated against already-tested markets.
+    if getattr(settings, "pipeline_strict_boundary", False):
+        if result.get("in_market_boundary") is False:
+            result["is_relevant"] = False
+            result["confidence"] = min(conf, 0.3)
+            result["reject_reason"] = "market_boundary"
+            return result, smart_data, signals
 
     llm_strong = _llm_confident_inmarket(result, kw_prof)
     if _is_clearly_off_market(
@@ -975,6 +1035,7 @@ async def _finalize_quality_classify(
     smart_data: dict[str, Any],
     is_seed: bool,
     industry_kws: list[str],
+    settings: Settings | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     result = _apply_quality_relevance_boost(
         result,
@@ -995,6 +1056,7 @@ async def _finalize_quality_classify(
         smart_data=smart_data,
         is_seed=is_seed,
         industry_kws=industry_kws,
+        settings=settings,
     )
 
 
@@ -1386,6 +1448,8 @@ async def classify_company(
                 "country_match": bool(out.get("country_match")),
                 "confidence": float(out.get("confidence") or 0.45),
             }
+            if "in_market_boundary" in out:
+                result["in_market_boundary"] = bool(out.get("in_market_boundary"))
             if result["role"] not in _VALID_ROLES:
                 result["role"] = _infer_role_from_name_domain(name, domain)
             result["confidence"] = min(result["confidence"], 0.72)
@@ -1420,6 +1484,7 @@ async def classify_company(
                     smart_data=smart_data,
                     is_seed=is_seed,
                     industry_kws=industry_kws,
+                    settings=settings,
                 )
             print(
                 f"  [classify] {name[:35]} → relevant={result['is_relevant']} "
@@ -1453,6 +1518,7 @@ async def classify_company(
                 smart_data=smart_data,
                 is_seed=is_seed,
                 industry_kws=industry_kws,
+                settings=settings,
             )
             return _pack_classify_result(fb, smart_data, signals)
         return fb
@@ -1511,6 +1577,13 @@ async def classify_company(
             "country_match": bool(out.get("country_match")),
             "confidence": float(out.get("confidence") or 0.5),
         }
+        # Real bug found while wiring this up: this dict is manually rebuilt with only
+        # named keys, so a raw LLM field not listed here (like in_market_boundary) is
+        # silently dropped and the boundary check in _finalize_quality_classify always
+        # sees None instead of the LLM's real true/false judgment. Default True (in
+        # bounds) when the LLM omits it or the market has no boundary to judge against.
+        if "in_market_boundary" in out:
+            result["in_market_boundary"] = bool(out.get("in_market_boundary"))
         if quality_mode:
             result = _merge_llm_landscape_fields(
                 result,
@@ -1545,6 +1618,7 @@ async def classify_company(
                 smart_data=smart_data,
                 is_seed=is_seed,
                 industry_kws=industry_kws,
+                settings=settings,
             )
         # Prefer the LLM's role (it read the actual site). company_function is derived
         # from the SEARCH PROMPT, so with focused discovery it is uniformly "manufacturer"
@@ -1587,6 +1661,7 @@ async def classify_company(
                 smart_data=smart_data,
                 is_seed=is_seed,
                 industry_kws=industry_kws,
+                settings=settings,
             )
             return _pack_classify_result(fb, smart_data, signals)
         elif not recall_mode:

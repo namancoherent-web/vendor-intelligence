@@ -185,6 +185,29 @@ class Settings(BaseSettings):
     pipeline_strict_geo: bool = Field(
         default=True, validation_alias="PIPELINE_STRICT_GEO"
     )
+    # Real bug found via a live "Global Grapes Market" run: the hardcoded industrial
+    # section list (Manufacturers/Distributors/...) doesn't fit every real industry —
+    # a grower/vineyard has no honest home in it. When enabled, the section list is
+    # derived from THIS query's own market map (which already computes market-specific
+    # segments per run) instead of the fixed industrial list. Validated side by side on
+    # grapes (trade-side taxonomy, correct) and a re-run of HDPE Jerry Can in Europe (no
+    # regression vs. the pre-existing baseline export) — now on by default.
+    pipeline_dynamic_sections: bool = Field(
+        default=True, validation_alias="PIPELINE_DYNAMIC_SECTIONS"
+    )
+    # Same live run: a farmer/grower got classified as "Manufacturer" and then bypassed
+    # every relevance check unconditionally, since any company in a small set of roles
+    # is treated as automatically relevant regardless of the market's own defined scope
+    # boundary. When enabled, a company outside the market's own out_of_scope boundary
+    # (e.g. primary producers in a commodity-trade market) is excluded before that
+    # role-based override can rescue it. Validated: a full grapes re-run with this flag
+    # on correctly excluded every grower/winery/agrochemical supplier (e.g. Plantaže,
+    # previously a confirmed leak) while keeping trade-side companies; the HDPE re-run
+    # showed no false-positive boundary exclusions among real in-market companies — now
+    # on by default.
+    pipeline_strict_boundary: bool = Field(
+        default=True, validation_alias="PIPELINE_STRICT_BOUNDARY"
+    )
     pipeline_shuffle_export: bool = Field(
         default=False, validation_alias="PIPELINE_SHUFFLE_EXPORT"
     )

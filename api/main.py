@@ -269,7 +269,14 @@ def _serialize_job(job: dict[str, Any]) -> dict[str, Any]:
         "log_tail": log[-4000:],
         "has_result": bool(job.get("result") or job.get("has_result")),
         "slug": slug or job.get("slug") or "",
-        "companies": len((result or {}).get("relevant_companies") or []) if isinstance(result, dict) else 0,
+        # Same fix as ui/services.py's session-log write: count only is_relevant=True
+        # rows so this matches what the CSV/XLSX/DOCX exporters actually write out,
+        # not the full classified list (which includes rejected rows).
+        "companies": (
+            len([r for r in (result.get("relevant_companies") or []) if r.get("is_relevant")])
+            if isinstance(result, dict)
+            else 0
+        ),
         "csv_path": (result or {}).get("_csv_path") if isinstance(result, dict) else None,
         "xlsx_path": (result or {}).get("_xlsx_path") if isinstance(result, dict) else None,
         "docx_path": (result or {}).get("_docx_path") if isinstance(result, dict) else None,
@@ -579,6 +586,38 @@ def api_list_runs(user: dict[str, Any] = Depends(require_user)) -> dict[str, Any
     except Exception as exc:
         return {"owned": owned, "cloud": [], "error": str(exc)}
     return {"owned": owned[:50], "cloud": gcs_entries[:80]}
+
+
+@app.get("/api/admin/runs")
+def api_admin_list_runs(
+    limit: int = 200, user: dict[str, Any] = Depends(require_user)
+) -> dict[str, Any]:
+    """Admin-only: every user's run history, including the RAW query/brief text they
+    typed (not the AI-derived market label shown in the normal history UI) — lets an
+    admin audit whether users are writing specific, well-formed prompts."""
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    from ui.services import load_session_log
+
+    rows = [e for e in load_session_log() if str(e.get("status") or "") == "ok"]
+    rows.sort(key=lambda e: str(e.get("ran_at") or ""), reverse=True)
+    return {
+        "runs": [
+            {
+                "run_id": r.get("run_id"),
+                "owner_email": r.get("owner_email"),
+                "market_label": r.get("query"),
+                "raw_query": r.get("raw_query", ""),
+                "brief_text": r.get("brief_text", ""),
+                "country": r.get("country"),
+                "companies_exported": r.get("companies_exported"),
+                "elapsed_minutes": r.get("elapsed_minutes"),
+                "estimated_cost_usd": r.get("estimated_cost_usd"),
+                "ran_at": r.get("ran_at"),
+            }
+            for r in rows[: max(1, min(limit, 1000))]
+        ]
+    }
 
 
 @app.get("/api/runs/{slug}/downloads")

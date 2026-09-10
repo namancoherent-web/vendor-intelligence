@@ -63,9 +63,15 @@ def _audit(
     )
 
 
+# Ships as a code default so every teammate's install recognizes the admin
+# without editing their local, gitignored .env — a FORCE_UPDATE.bat pull is enough.
+# AUTH_ADMIN_EMAILS (if set) is additive on top of this, not a replacement.
+_DEFAULT_ADMIN_EMAILS = {"naman@coherentmarketinsights.com"}
+
+
 def _get_or_create_user(db: Session, email: str) -> User:
     user = db.scalar(select(User).where(User.email == email))
-    admin_emails = {
+    admin_emails = _DEFAULT_ADMIN_EMAILS | {
         e.strip().lower()
         for e in (os.getenv("AUTH_ADMIN_EMAILS") or "").split(",")
         if e.strip()

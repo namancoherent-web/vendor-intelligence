@@ -9,7 +9,35 @@ Required JSON shape:
   "market_definition": "2-3 sentences: what this market is, who participates, geographic/product boundary",
   "market_boundary": {
     "in_scope": ["5-8 participant types or product layers IN scope"],
-    "out_of_scope": ["4-6 adjacent markets or page types to EXCLUDE"]
+    "out_of_scope": ["4-6 adjacent markets or page types to EXCLUDE — this field is actually
+                     enforced (a company matching one of these phrases in its own
+                     name/domain or self-description is excluded from the report), so be
+                     specific and real, not decorative. For a commodity, agricultural, or
+                     raw-material market (e.g. grapes, coffee, cotton, timber, grain),
+                     DEFAULT to including primary producers/growers/farmers/farms/
+                     plantations here — UNLESS the user's query is explicitly about primary
+                     production/farming itself (e.g. 'grape growers' or 'vineyard
+                     operators' rather than a bare 'grapes market'). For a bare commodity-
+                     name query, default in_scope to the TRADE/BUYER/PROCESSING side
+                     (exporters, importers, traders, packers, processors, distributors) —
+                     the report is about who buys/moves/resells the commodity, not who
+                     grows it.
+
+                     SEPARATELY — for a market that names a RAW MATERIAL / SUBSTRATE /
+                     INTERMEDIATE INPUT that a much larger, better-known DOWNSTREAM
+                     product is built FROM (e.g. 'wafer market' = silicon wafer
+                     substrates, NOT the semiconductor chips/devices fabricated ON that
+                     wafer; 'API market' = the active pharmaceutical ingredient itself,
+                     NOT the finished drug formulation; 'steel coil market' = the coil
+                     itself, NOT cars/appliances built from it), the downstream
+                     finished-product/device makers are almost always FAR more numerous,
+                     larger, and better-indexed online than the upstream raw-material
+                     makers — this makes it very easy to silently scope in the wrong,
+                     downstream layer. DEFAULT to excluding the downstream finished-
+                     product/device manufacturers here by name (e.g. for wafers: exclude
+                     'semiconductor manufacturer', 'chip maker', 'fabless', 'IC
+                     manufacturer', 'foundry') UNLESS the user's query is explicitly about
+                     that downstream product instead."]
   },
   "value_chain_layers": [
     {
@@ -127,5 +155,34 @@ specialist makers that never rank for "satcom company"):
        maritime VSAT service provider, aviation in-flight connectivity provider,
        enterprise & government satcom integrator, managed connectivity / teleport operator,
        satellite IoT / M2M connectivity provider
+
+AGRICULTURE / COMMODITIES (e.g. grapes, coffee, cotton, grain, other farmed commodities —
+framed around the TRADE/BUYER side, not primary production; see market_boundary above):
+  L1 Post-Harvest: packers, packhouses, cold-storage/logistics operators, processors
+     (e.g. juicing, drying, milling, roasting)
+  L2 Channel: exporters, importers, wholesale trading houses, commodity brokers, distributors
+  L3 Adjacent (only if in query): certification bodies (e.g. GlobalGAP, Fairtrade), grower
+     associations/cooperatives THAT RESELL (not the growers themselves), agri-input suppliers
+  Do NOT add a "growers / farms / primary production" layer for a bare commodity-name query —
+  that is the out-of-scope side by default for this market type (see market_boundary above).
+
+RAW MATERIAL / SUBSTRATE markets (e.g. "wafer market" = silicon wafer substrates, NOT
+semiconductor chips built on them; "API market" = the active pharmaceutical ingredient, NOT
+the finished drug; framed around the UPSTREAM raw-material makers, not the downstream
+finished-product/device makers built from that material — see market_boundary above):
+  L1 Materials/Inputs: raw-material producers, ingot/boule growers (for wafers), refiners,
+     purification/processing specialists
+  L2 Substrate Manufacturing: the actual substrate/material manufacturers (e.g. wafer
+     manufacturers, epitaxial wafer makers, wafer reclaim/reprocessing specialists) — this
+     IS the market's main product; keep queries specific to substrate-making vocabulary
+     (e.g. "silicon wafer manufacturer", "epitaxial wafer producer", "wafer polishing"),
+     NOT generic downstream-industry vocabulary (e.g. do NOT search "semiconductor
+     manufacturer" or "chip maker" for a wafer query — that surfaces the wrong, much
+     larger downstream layer instead of real wafer makers)
+  L3 Channel: distributors, specialty material traders, quality/certification services
+  Do NOT add a "device/chip/finished-product manufacturer" layer for a bare raw-material
+  query — that is the out-of-scope side by default for this market type (see market_boundary
+  above); the downstream industry is a much larger, better-indexed adjacent market that is
+  easy to accidentally scope in instead of the actual raw-material market being asked about.
 
 Infer geography from the user query. Return ONLY the JSON object.

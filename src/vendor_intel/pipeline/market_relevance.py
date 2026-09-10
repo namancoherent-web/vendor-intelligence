@@ -146,6 +146,21 @@ def keyword_profile(
     )
 
 
+# Real bug found via a live "Global Grapes Market" run: market_boundary.out_of_scope
+# (computed by understand_market() every run — e.g. "Grape growers and vineyards" for a
+# grapes-trade market) was never consumed anywhere downstream, so a genuine grower still
+# showed up in the export. A keyword/regex-matching approach was tried and abandoned
+# here: distinguishing "IS a grower" ("Plantaže... cultivates vineyards... one of the
+# largest grape growers") from "sources FROM growers" (a real exporter's routine
+# supplier mention) needs actual language understanding — every threshold/heuristic
+# fix that caught one real case broke another in live testing. The classifier LLM
+# already reads each company's full text for every other field in the same call, so it
+# judges this directly as part of that call instead (see classifier.py's
+# "in_market_boundary" field and MARKET BOUNDARY prompt instructions) — no heuristic
+# layer needed here; market_context_summary() just needs to surface out_of_scope to the
+# prompt (see that function below), which it previously did not.
+
+
 def _blob(*parts: str) -> str:
     return " ".join(p for p in parts if p).lower()
 
@@ -247,6 +262,15 @@ def market_context_summary(
         "include_keywords": list(prof.include)[:12],
         "exclude_keywords": list(prof.exclude)[:10],
         "in_scope": (scope.get("market_boundary") or {}).get("in_scope")
+        if isinstance(scope.get("market_boundary"), dict)
+        else [],
+        # Real gap found via a live run: only "in_scope" was ever surfaced here, so the
+        # classifier LLM never saw what the market's own understanding call explicitly
+        # said was OUT of scope (e.g. "Grape growers and vineyards" for a grapes-trade
+        # market) — it had no way to judge a genuine grower against that boundary since
+        # half the boundary definition was silently dropped before it ever reached the
+        # prompt. See is_in_market_boundary in the classifier schema.
+        "out_of_scope": (scope.get("market_boundary") or {}).get("out_of_scope")
         if isinstance(scope.get("market_boundary"), dict)
         else [],
     }

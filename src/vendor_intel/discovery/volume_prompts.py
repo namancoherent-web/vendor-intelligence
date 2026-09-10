@@ -125,6 +125,47 @@ def _cnc_diversity_prompts(topic: str, g: str, alt: str) -> list[tuple[str, str,
     ]
 
 
+def _is_agriculture_market(market: str, terms: list[str]) -> bool:
+    """Real bug found via a live "Global Grapes Market" run: with no agriculture bucket,
+    a commodity/crop query fell to _generic_diversity_prompts, whose templates
+    ("manufacturer", "OEM manufacturer", "producer... plant/facility") don't match how
+    real grape buyers describe themselves online (exporter, packer, trading house) — the
+    growers that DO get found this way get excluded by the market-boundary check instead
+    (see market_relevance.boundary_exclude_hit), so this bucket is deliberately framed
+    around the trade/buyer side, not primary production, matching that exclusion."""
+    blob = f"{market} {' '.join(terms)}".lower()
+    return bool(
+        re.search(
+            r"\b(?:agricultur\w*|agri-|horticultur\w*|viticultur\w*|"
+            r"grape\w*|vineyard\w*|raisin\w*|"
+            r"fruit\w*|vegetable\w*|orchard\w*|"
+            r"grain\w*|cereal\w*|wheat|soy(?:bean)?\w*|barley|"
+            r"coffee|cocoa|cotton|sugar\s*cane|sugarcane|"
+            r"commodity\s*crop\w*|cash\s*crop\w*|"
+            r"grower\w*|plantation\w*)\b",
+            blob,
+        )
+    )
+
+
+def _agriculture_diversity_prompts(topic: str, g: str, alt: str) -> list[tuple[str, str, str]]:
+    """Deliberately no "manufacturer"/"OEM"/"manufacturing plant" templates — nonsensical
+    for a farmed commodity and would just rediscover growers the boundary check excludes."""
+    t = topic or alt or "the commodity"
+    return [
+        ("D1", _q(t, "exporter", g, "official", "company"), "exporters"),
+        ("D2", _q(t, "export", "company", g, "corporate", "website"), "exporters"),
+        ("D3", _q(t, "packer", "packhouse", g), "packers"),
+        ("D4", _q(t, "importer", g, "official", "corporate"), "importers"),
+        ("D5", _q("authorized", t, "distributor", g, "trading", "house"), "distributors"),
+        ("D6", _q(t, "trading", "company", g, "corporate", "site"), "distributors"),
+        ("D7", _q(t, "wholesale", "supplier", g), "suppliers"),
+        ("D8", _q(t, "cooperative", g, "official", "website"), "cooperatives"),
+        ("D9", _q(t, "processor", g, "corporate", "profile"), "processors"),
+        ("D10", _q(alt or t, "buyer", g, "corporate", "company"), "distributors"),
+    ]
+
+
 def _is_chemical_market(market: str, terms: list[str]) -> bool:
     # Tight signals only — must NOT fire on battery terms like "lithium polymer"/"LiPo".
     blob = f"{market} {' '.join(terms)}".lower()
@@ -279,6 +320,8 @@ def build_volume_prompts(
         buckets = _timing_diversity_prompts(topic, g, alt)
     elif _is_cnc_sim_market(market, terms):
         buckets = _cnc_diversity_prompts(topic, g, alt)
+    elif _is_agriculture_market(market, terms):
+        buckets = _agriculture_diversity_prompts(topic, g, alt)
     else:
         buckets = _generic_diversity_prompts(topic, g, alt)
 

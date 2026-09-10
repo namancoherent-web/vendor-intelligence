@@ -73,6 +73,51 @@ def build_section_taxonomy(main_product: str) -> list[str]:
     ]
 
 
+def taxonomy_from_market_map(scope: dict[str, Any] | None) -> list[str]:
+    """Section list derived from THIS query's own market map, instead of the fixed
+    industrial-flavored list above (Manufacturers/Distributors/... doesn't fit every
+    real industry — e.g. a grower/vineyard has no honest home in that list, which is
+    why an agriculture-market run mislabels or empties out real sections). Reuses the
+    already-general CEO-custom-sections machinery (`custom_section_for_row`,
+    `group_into_sections(..., custom=True)`) by treating the market's own segment
+    names as if a CEO had typed them in — no new grouping logic needed.
+
+    Returns [] when the market map is missing/thin (offline fallback, degraded LLM
+    call) — callers must fall back to `build_section_taxonomy` in that case, so
+    already-tested industrial markets are unaffected if this ever comes back empty.
+    """
+    scope = scope or {}
+    names: list[str] = []
+    seen: set[str] = set()
+
+    def _add(label: str) -> None:
+        s = _title(str(label or "").strip())
+        key = s.lower()
+        if s and key not in seen:
+            seen.add(key)
+            names.append(s)
+
+    for layer in scope.get("value_chain_layers") or []:
+        if not isinstance(layer, dict):
+            continue
+        for seg in layer.get("segments") or []:
+            if isinstance(seg, dict):
+                _add(str(seg.get("segment_name") or ""))
+            elif isinstance(seg, str):
+                _add(seg)
+
+    if len(names) < 4:
+        for fn in scope.get("ecosystem_functions") or []:
+            _add(str(fn or ""))
+
+    if len(names) < 4:
+        return []
+
+    if "other" not in {n.lower() for n in names}:
+        names.append("Other")
+    return names
+
+
 _ROLE_TO_SECTION: dict[str, str] = {
     "Supplier": "Suppliers / Raw Materials",
     "Technology Provider": "Technology Providers",

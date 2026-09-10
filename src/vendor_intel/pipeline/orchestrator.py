@@ -689,19 +689,44 @@ async def run_pipeline(
     from vendor_intel.clients.claude import ClaudeClient
 
     client = ClaudeClient(settings)
-    from vendor_intel.pipeline.sections import build_section_taxonomy, main_product_label
+    from vendor_intel.pipeline.sections import (
+        build_section_taxonomy,
+        main_product_label,
+        taxonomy_from_market_map,
+    )
 
     main_product = main_product_label(query_context, scope)
     custom_sections = [
         str(s).strip() for s in (query_context.get("sections") or []) if str(s).strip()
     ]
+    sections_are_custom = False
     if custom_sections:
         if not any(s.lower() == "other" for s in custom_sections):
             custom_sections = custom_sections + ["Other"]
         section_taxonomy = custom_sections
+        sections_are_custom = True
         print(f"  [pipeline] using {len(custom_sections)} custom CEO sections", flush=True)
+    elif getattr(settings, "pipeline_dynamic_sections", False):
+        market_taxonomy = taxonomy_from_market_map(scope)
+        if market_taxonomy:
+            section_taxonomy = market_taxonomy
+            sections_are_custom = True
+            print(
+                f"  [pipeline] using {len(market_taxonomy)} market-derived sections "
+                f"(this query's own value chain)",
+                flush=True,
+            )
+        else:
+            section_taxonomy = build_section_taxonomy(main_product)
     else:
         section_taxonomy = build_section_taxonomy(main_product)
+    # Persist onto the ORIGINAL query_context (not just classify_ctx's copy) so the
+    # exact taxonomy used at classify time round-trips into result["query_context"]
+    # and every export function (CSV/XLSX/DOCX) reads the SAME list, instead of each
+    # one separately recomputing (and potentially drifting from what companies were
+    # actually classified against).
+    query_context["value_chain_sections"] = section_taxonomy
+    query_context["sections_are_custom"] = sections_are_custom
     classify_ctx = {
         **query_context,
         "plan_keywords": industry_kws,
@@ -709,6 +734,7 @@ async def run_pipeline(
         "market": str(scope.get("market") or query_context.get("industry") or ""),
         "main_product": main_product,
         "value_chain_sections": section_taxonomy,
+        "sections_are_custom": sections_are_custom,
     }
     classify_concurrent = int(getattr(settings, "pipeline_classify_concurrent", 8) or 8)
     print(
@@ -1523,11 +1549,24 @@ def save_pipeline_csv(result: dict[str, Any], path: str) -> str:
 
     _scope = scope if isinstance(scope, dict) else None
     main_product = main_product_label(ctx, _scope)
+    # Read the SAME taxonomy classify time actually used (persisted onto query_context
+    # in orchestrator.py's classify_ctx build) rather than recomputing independently —
+    # avoids drift between what companies were classified against and what the export
+    # groups them into. Falls back to a fresh custom-sections read (older result blobs
+    # that predate this field) or the hardcoded list.
+    persisted_taxonomy = [
+        str(s).strip() for s in (ctx.get("value_chain_sections") or []) if str(s).strip()
+    ]
     custom_sections = [
         str(s).strip() for s in (ctx.get("sections") or []) if str(s).strip()
     ]
     multi_rows, single_rows = _partition_multisegment(rows)
-    if custom_sections:
+    if persisted_taxonomy:
+        taxonomy = persisted_taxonomy
+        grouped = group_into_sections(
+            single_rows, taxonomy, main_product, custom=bool(ctx.get("sections_are_custom"))
+        )
+    elif custom_sections:
         taxonomy = custom_sections
         grouped = group_into_sections(single_rows, taxonomy, main_product, custom=True)
     else:
@@ -1674,16 +1713,26 @@ def save_pipeline_xlsx(result: dict[str, Any], path: str) -> str:
     )
 
     main_product = main_product_label(ctx, _scope)
+    # See save_pipeline_csv: read the taxonomy classify time actually used, persisted
+    # onto query_context, before falling back to a fresh custom-sections read or the
+    # hardcoded list — keeps this export in sync with what companies were actually
+    # classified against instead of independently recomputing.
+    persisted_taxonomy = [
+        str(s).strip() for s in (ctx.get("value_chain_sections") or []) if str(s).strip()
+    ]
     custom_sections = [str(s).strip() for s in (ctx.get("sections") or []) if str(s).strip()]
-    if custom_sections:
-        # Brief-scoped Excel: only the sections named in the brief (no auto-taxonomy, drop the
-        # catch-all 'Other' of off-brief rows), with 'Multi-Segment Players' appended at the bottom.
+    ceo_typed_sections = custom_sections and not persisted_taxonomy
+    if persisted_taxonomy or custom_sections:
+        # Brief-scoped / market-derived Excel: only the sections in this list (no
+        # catch-all 'Other' of off-brief rows for a genuinely CEO-typed brief), with
+        # 'Multi-Segment Players' appended at the bottom.
+        taxonomy = persisted_taxonomy or custom_sections
         multi_rows, single_rows = _partition_multisegment(rows)
-        grouped = group_into_sections(single_rows, custom_sections, main_product, custom=True)
-        allowed = {s.strip().lower() for s in custom_sections}
-        grouped = _alpha_sort_sections(
-            [(n, r) for n, r in grouped if n.strip().lower() in allowed]
-        )
+        grouped = group_into_sections(single_rows, taxonomy, main_product, custom=True)
+        if ceo_typed_sections:
+            allowed = {s.strip().lower() for s in custom_sections}
+            grouped = [(n, r) for n, r in grouped if n.strip().lower() in allowed]
+        grouped = _alpha_sort_sections(grouped)
         if multi_rows:
             grouped = grouped + [("Multi-Segment Players", multi_rows)]
     else:
@@ -1803,10 +1852,16 @@ def save_pipeline_docx(result: dict[str, Any], path: str) -> str:
     rows = dedupe_export_rows(rows)
 
     main_product = main_product_label(ctx, _scope)
+    # See save_pipeline_csv: read the taxonomy classify time actually used before
+    # falling back to a fresh custom-sections read or the hardcoded list.
+    persisted_taxonomy = [
+        str(s).strip() for s in (ctx.get("value_chain_sections") or []) if str(s).strip()
+    ]
     custom_sections = [str(s).strip() for s in (ctx.get("sections") or []) if str(s).strip()]
+    taxonomy = persisted_taxonomy or custom_sections
     multi_rows, single_rows = _partition_multisegment(rows)
-    if custom_sections:
-        grouped = group_into_sections(single_rows, custom_sections, main_product, custom=True)
+    if taxonomy:
+        grouped = group_into_sections(single_rows, taxonomy, main_product, custom=True)
     else:
         grouped = group_into_sections(single_rows, build_section_taxonomy(main_product), main_product)
     grouped = _alpha_sort_sections(grouped)
