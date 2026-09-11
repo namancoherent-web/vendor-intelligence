@@ -97,6 +97,12 @@ def is_configured() -> bool:
         return _key_ok(GROQ_API_KEY)
     if LLM_PROVIDER == "opencode":
         return bool(_opencode_key())
+    if LLM_PROVIDER == "google_scraper":
+        # No API key needed — just needs a local Chrome install, which we can't cheaply
+        # verify here without actually launching it. Assume available; a real failure
+        # (Chrome missing, driver install fails) surfaces per-call as an llm_failed error
+        # instead of blocking startup.
+        return True
     if LLM_PROVIDER in ("mock", "none"):
         return False
     return _key_ok(ANTHROPIC_API_KEY)
@@ -472,6 +478,81 @@ def llm_complete(
     return result
 
 
+# --- Google AI Mode scraper provider (this test copy only) ------------------------------
+#
+# No real API — every "call" drives a real Chrome browser to Google's AI Mode search page,
+# types the combined system+user prompt as one question, and scrapes the rendered answer
+# back out as free text. There is no JSON contract here (unlike every other provider), so
+# JSON extraction/repair is left entirely to the existing llm_complete_json() wrapper above,
+# which already tries fenced blocks, brace-matching, and _repair_json_text() regardless of
+# which provider produced the raw text — this function only needs to return that raw text.
+#
+# A pool of N independent browser instances (not N tabs in one instance — Selenium/
+# ChromeDriver doesn't support that safely) gives real parallelism instead of one search at a
+# time. Pool size is deliberately small and env-configurable: too high risks Google rate-
+# limiting/CAPTCHA-blocking a burst of automated searches from one machine.
+
+import queue as _queue
+import threading as _threading
+
+_GOOGLE_SCRAPER_POOL_SIZE = max(1, int(os.getenv("GOOGLE_SCRAPER_POOL_SIZE", "3")))
+_google_scraper_pool: "_queue.Queue[Any] | None" = None
+_google_scraper_pool_lock = _threading.Lock()
+
+
+def _get_google_scraper_pool() -> "_queue.Queue[Any]":
+    """Lazily create the pool on first use (not at import time — a plain `import
+    vendor_intel.placeholders.llm` must never launch a browser)."""
+    global _google_scraper_pool
+    if _google_scraper_pool is not None:
+        return _google_scraper_pool
+    with _google_scraper_pool_lock:
+        if _google_scraper_pool is not None:
+            return _google_scraper_pool
+        from google_ai_scraper import GoogleAIModeScraper
+
+        pool: "_queue.Queue[Any]" = _queue.Queue()
+        for _ in range(_GOOGLE_SCRAPER_POOL_SIZE):
+            pool.put(GoogleAIModeScraper(headless=True, verbose=False))
+        _google_scraper_pool = pool
+        return pool
+
+
+def _google_scraper_complete(system: str, user: str) -> str:
+    """Combine system+user into one question, run it through a pooled scraper instance,
+    and return the scraped answer text as-is (tables included, as markdown) — the caller
+    (llm_complete_json) does its own JSON extraction on whatever text comes back."""
+    question = f"{system}\n\n{user}".strip()
+    pool = _get_google_scraper_pool()
+    scraper = pool.get()
+    try:
+        result = scraper.ask_ai_mode(question)
+    except Exception as exc:
+        # A crashed/disconnected browser instance is worse than useless in the pool — drop
+        # it instead of returning it, so a broken instance doesn't poison every future call
+        # that happens to draw it.
+        try:
+            scraper.close()
+        except Exception:
+            pass
+        return json.dumps({"error": f"google_scraper_exception: {exc}", "status": "llm_failed"})
+    pool.put(scraper)
+
+    if not result.get("success") or not result.get("answer"):
+        return json.dumps(
+            {
+                "error": f"google_scraper_no_answer: {result.get('error') or 'unknown'}",
+                "status": "llm_failed",
+            }
+        )
+
+    answer = str(result.get("answer") or "")
+    tables = result.get("tables") or []
+    if tables:
+        answer = answer + "\n\n" + "\n\n".join(tables)
+    return answer
+
+
 def _llm_complete_raw(
     system: str,
     user: str,
@@ -492,6 +573,8 @@ def _llm_complete_raw(
             return _groq_complete(system, user, model or DEFAULT_GROQ_MODEL, max_tokens)
         if LLM_PROVIDER == "opencode":
             return _opencode_complete(system, user, model or OPENCODE_MODEL, max_tokens)
+        if LLM_PROVIDER == "google_scraper":
+            return _google_scraper_complete(system, user)
         return _anthropic_complete(system, user, model or DEFAULT_COMPILER_MODEL, max_tokens)
     except httpx.HTTPStatusError as e:
         detail = ""

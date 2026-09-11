@@ -42,6 +42,11 @@ selenium>=4.25.0              # Google Chrome required on the host
 trafilatura>=1.12.0           # Extract text from rendered HTML
 lxml>=5.0.0                   # HTML parser (helps trafilatura on Windows)
 
+# --- Google AI Mode scraper (google-scraper-test branch only; LLM_PROVIDER=google_scraper) ---
+webdriver-manager>=4.0.0      # Auto-downloads/manages the matching chromedriver
+beautifulsoup4>=4.12.0        # HTML -> text/table parsing for scraped AI answers
+tabulate>=0.9.0               # ASCII table printing (google_ai_scraper.py CLI)
+
 # --- Entity deduplication ---
 rapidfuzz>=3.10.0
 
